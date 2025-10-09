@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CRUD Usuarios</title>
+</head>
+<body>
+<h1>Gestión de Usuarios</h1>
+
+<h2>Crear/Editar Usuario</h2>
+<form id="usuarioForm">
+    <input type="hidden" id="usuarioId">
+
+    <p>
+        <label>Email:</label><br>
+        <input type="text" id="email" required>
+    </p>
+
+    <p>
+        <label>Password:</label><br>
+        <input type="password" id="password">
+        <small>(Dejar vacío para no cambiar al editar)</small>
+    </p>
+
+    <p>
+        <label>Tenant ID:</label><br>
+        <select id="tenantId" required>
+            <option value="">Seleccione...</option>
+            <option value="tenant_a">Tenant A</option>
+            <option value="tenant_b">Tenant B</option>
+        </select>
+    </p>
+
+    <p>
+        <label>Rol:</label><br>
+        <select id="role" required>
+            <option value="">Seleccione...</option>
+            <option value="ADMIN">ADMIN</option>
+            <option value="USER">USER</option>
+        </select>
+    </p>
+
+    <button type="submit" id="submitBtn">Crear Usuario</button>
+    <button type="button" id="cancelBtn" onclick="cancelarEdicion()" style="display:none">Cancelar</button>
+</form>
+
+<hr>
+
+<h2>Lista de Usuarios</h2>
+<button onclick="cargarUsuarios()">Recargar Lista</button>
+<br><br>
+<table border="1" cellpadding="10">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Email</th>
+        <th>Tenant ID</th>
+        <th>Rol</th>
+        <th>Acciones</th>
+    </tr>
+    </thead>
+    <tbody id="usuariosTable">
+    <tr>
+        <td colspan="5">Cargando...</td>
+    </tr>
+    </tbody>
+</table>
+
+<hr>
+
+<div id="mensaje"></div>
+
+<hr>
+
+<p><a href="login.html">Ir al Login</a></p>
+
+<script>
+    const API_URL = 'http://localhost:8080/api/usuarios';
+
+    // Función para obtener el token del localStorage
+    function getToken() {
+        return localStorage.getItem('jwt_token');
+    }
+
+    // Función para obtener headers con autenticación
+    function getAuthHeaders() {
+        const token = getToken();
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        return headers;
+    }
+
+    // Cargar usuarios al inicio
+    window.onload = function() {
+        cargarUsuarios();
+    };
+
+    // LISTAR usuarios
+    async function cargarUsuarios() {
+        try {
+            const response = await fetch(API_URL, {
+                headers: getAuthHeaders()  // ✅ AGREGADO
+            });
+
+            const usuarios = await response.json();
+
+            const tbody = document.getElementById('usuariosTable');
+            tbody.innerHTML = '';
+
+            if (usuarios.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5">No hay usuarios</td></tr>';
+                return;
+            }
+
+            usuarios.forEach(usuario => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${usuario.id}</td>
+                    <td>${usuario.email}</td>
+                    <td>${usuario.tenantId}</td>
+                    <td>${usuario.role}</td>
+                    <td>
+                        <button onclick="editarUsuario('${usuario.id}')">Editar</button>
+                        <button onclick="eliminarUsuario('${usuario.id}', '${usuario.email}')">Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (error) {
+            mostrarMensaje('Error al cargar usuarios: ' + error.message, 'red');
+        }
+    }
+
+    // CREAR o ACTUALIZAR usuario
+    document.getElementById('usuarioForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const usuarioId = document.getElementById('usuarioId').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const tenantId = document.getElementById('tenantId').value;
+        const role = document.getElementById('role').value;
+
+        const data = {
+            email: email,
+            tenantId: tenantId,
+            role: role
+        };
+
+        if (password) {
+            data.password = password;
+        }
+
+        try {
+            let response;
+
+            if (usuarioId) {
+                // ACTUALIZAR
+                response = await fetch(`${API_URL}/${usuarioId}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),  // ✅ CORREGIDO
+                    body: JSON.stringify(data)
+                });
+            } else {
+                // CREAR
+                if (!password) {
+                    mostrarMensaje('La contraseña es obligatoria al crear usuario', 'red');
+                    return;
+                }
+                response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),  // ✅ CORREGIDO
+                    body: JSON.stringify(data)
+                });
+            }
+
+            if (response.ok) {
+                mostrarMensaje(usuarioId ? 'Usuario actualizado' : 'Usuario creado', 'green');
+                document.getElementById('usuarioForm').reset();
+                document.getElementById('usuarioId').value = '';
+                document.getElementById('submitBtn').textContent = 'Crear Usuario';
+                document.getElementById('cancelBtn').style.display = 'none';
+                cargarUsuarios();
+            } else {
+                const error = await response.text();
+                mostrarMensaje('Error: ' + error, 'red');
+            }
+        } catch (error) {
+            mostrarMensaje('Error de conexión: ' + error.message, 'red');
+        }
+    });
+
+    // EDITAR usuario
+    async function editarUsuario(id) {
+        try {
+            const response = await fetch(`${API_URL}/${id}`, {
+                headers: getAuthHeaders()  // ✅ AGREGADO
+            });
+            const usuario = await response.json();
+
+            document.getElementById('usuarioId').value = usuario.id;
+            document.getElementById('email').value = usuario.email;
+            document.getElementById('password').value = '';
+            document.getElementById('tenantId').value = usuario.tenantId;
+            document.getElementById('role').value = usuario.role;
+            document.getElementById('submitBtn').textContent = 'Actualizar Usuario';
+            document.getElementById('cancelBtn').style.display = 'inline';
+
+            window.scrollTo(0, 0);
+        } catch (error) {
+            mostrarMensaje('Error al cargar usuario: ' + error.message, 'red');
+        }
+    }
+
+    // ELIMINAR usuario
+    async function eliminarUsuario(id, email) {
+        if (!confirm(`¿Está seguro de eliminar el usuario ${email}?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/${id}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()  // ✅ AGREGADO
+            });
+
+            if (response.ok) {
+                mostrarMensaje('Usuario eliminado', 'green');
+                cargarUsuarios();
+            } else {
+                mostrarMensaje('Error al eliminar usuario', 'red');
+            }
+        } catch (error) {
+            mostrarMensaje('Error de conexión: ' + error.message, 'red');
+        }
+    }
+
+    // Cancelar edición
+    function cancelarEdicion() {
+        document.getElementById('usuarioForm').reset();
+        document.getElementById('usuarioId').value = '';
+        document.getElementById('submitBtn').textContent = 'Crear Usuario';
+        document.getElementById('cancelBtn').style.display = 'none';
+    }
+
+    // Mostrar mensajes
+    function mostrarMensaje(texto, color) {
+        const div = document.getElementById('mensaje');
+        div.innerHTML = `<p style="color:${color}">${texto}</p>`;
+        setTimeout(() => { div.innerHTML = ''; }, 3000);
+    }
+</script>
+</body>
+</html>
