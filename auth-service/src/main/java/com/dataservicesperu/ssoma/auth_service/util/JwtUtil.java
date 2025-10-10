@@ -29,14 +29,14 @@ public class JwtUtil {
     /**
      * Genera un JWT con tenant_id como claim
      */
-    public String generateToken(String email, String tenantId, String role) {
+    public String generateToken(String nombreUsuario, String tenantId, String role) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("tenant_id", tenantId);
         claims.put("role", role);
 
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(email)
+                .setSubject(nombreUsuario)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -63,9 +63,9 @@ public class JwtUtil {
     }
 
     /**
-     * Extrae el email (subject) del token
+     * Extrae el nombre de usuario (subject) del token
      */
-    public String extractEmail(String token) {
+    public String extractNombreUsuario(String token) {
         return validateToken(token).getSubject();
     }
 }

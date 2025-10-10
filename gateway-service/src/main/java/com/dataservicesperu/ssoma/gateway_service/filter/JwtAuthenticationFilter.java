@@ -37,12 +37,12 @@ public class JwtAuthenticationFilter implements WebFilter {
         try {
             String token = authHeader.substring(7);
             String tenantId = jwtUtil.extractTenantId(token);
-            String email = jwtUtil.extractEmail(token);
+            String nombreUsuario = jwtUtil.extractNombreUsuario(token);  // ✅ CAMBIADO
             String role = jwtUtil.extractRole(token);
 
             System.out.println("=== GATEWAY - REQUEST INTERCEPTADO ===");
             System.out.println("Path: " + path);
-            System.out.println("Email: " + email);
+            System.out.println("Usuario: " + nombreUsuario);  // ✅ CAMBIADO
             System.out.println("Tenant ID: " + tenantId);
             System.out.println("Role: " + role);
 

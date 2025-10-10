@@ -11,8 +11,8 @@
     <input type="hidden" id="usuarioId">
 
     <p>
-        <label>Email:</label><br>
-        <input type="text" id="email" required>
+        <label>Nombre de Usuario:</label><br>
+        <input type="text" id="nombreUsuario" required>
     </p>
 
     <p>
@@ -52,7 +52,7 @@
     <thead>
     <tr>
         <th>ID</th>
-        <th>Email</th>
+        <th>Nombre Usuario</th>
         <th>Tenant ID</th>
         <th>Rol</th>
         <th>Acciones</th>
@@ -76,12 +76,10 @@
 <script>
     const API_URL = 'http://localhost:8080/api/usuarios';
 
-    // Función para obtener el token del localStorage
     function getToken() {
         return localStorage.getItem('jwt_token');
     }
 
-    // Función para obtener headers con autenticación
     function getAuthHeaders() {
         const token = getToken();
         const headers = {
@@ -93,16 +91,14 @@
         return headers;
     }
 
-    // Cargar usuarios al inicio
     window.onload = function() {
         cargarUsuarios();
     };
 
-    // LISTAR usuarios
     async function cargarUsuarios() {
         try {
             const response = await fetch(API_URL, {
-                headers: getAuthHeaders()  // ✅ AGREGADO
+                headers: getAuthHeaders()
             });
 
             const usuarios = await response.json();
@@ -119,12 +115,12 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${usuario.id}</td>
-                    <td>${usuario.email}</td>
+                    <td>${usuario.nombreUsuario}</td>
                     <td>${usuario.tenantId}</td>
                     <td>${usuario.role}</td>
                     <td>
                         <button onclick="editarUsuario('${usuario.id}')">Editar</button>
-                        <button onclick="eliminarUsuario('${usuario.id}', '${usuario.email}')">Eliminar</button>
+                        <button onclick="eliminarUsuario('${usuario.id}', '${usuario.nombreUsuario}')">Eliminar</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -134,18 +130,17 @@
         }
     }
 
-    // CREAR o ACTUALIZAR usuario
     document.getElementById('usuarioForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const usuarioId = document.getElementById('usuarioId').value;
-        const email = document.getElementById('email').value;
+        const nombreUsuario = document.getElementById('nombreUsuario').value;
         const password = document.getElementById('password').value;
         const tenantId = document.getElementById('tenantId').value;
         const role = document.getElementById('role').value;
 
         const data = {
-            email: email,
+            nombreUsuario: nombreUsuario,
             tenantId: tenantId,
             role: role
         };
@@ -158,21 +153,19 @@
             let response;
 
             if (usuarioId) {
-                // ACTUALIZAR
                 response = await fetch(`${API_URL}/${usuarioId}`, {
                     method: 'PUT',
-                    headers: getAuthHeaders(),  // ✅ CORREGIDO
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(data)
                 });
             } else {
-                // CREAR
                 if (!password) {
                     mostrarMensaje('La contraseña es obligatoria al crear usuario', 'red');
                     return;
                 }
                 response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: getAuthHeaders(),  // ✅ CORREGIDO
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(data)
                 });
             }
@@ -193,16 +186,15 @@
         }
     });
 
-    // EDITAR usuario
     async function editarUsuario(id) {
         try {
             const response = await fetch(`${API_URL}/${id}`, {
-                headers: getAuthHeaders()  // ✅ AGREGADO
+                headers: getAuthHeaders()
             });
             const usuario = await response.json();
 
             document.getElementById('usuarioId').value = usuario.id;
-            document.getElementById('email').value = usuario.email;
+            document.getElementById('nombreUsuario').value = usuario.nombreUsuario;
             document.getElementById('password').value = '';
             document.getElementById('tenantId').value = usuario.tenantId;
             document.getElementById('role').value = usuario.role;
@@ -215,16 +207,15 @@
         }
     }
 
-    // ELIMINAR usuario
-    async function eliminarUsuario(id, email) {
-        if (!confirm(`¿Está seguro de eliminar el usuario ${email}?`)) {
+    async function eliminarUsuario(id, nombreUsuario) {
+        if (!confirm(`¿Está seguro de eliminar el usuario ${nombreUsuario}?`)) {
             return;
         }
 
         try {
             const response = await fetch(`${API_URL}/${id}`, {
                 method: 'DELETE',
-                headers: getAuthHeaders()  // ✅ AGREGADO
+                headers: getAuthHeaders()
             });
 
             if (response.ok) {
@@ -238,7 +229,6 @@
         }
     }
 
-    // Cancelar edición
     function cancelarEdicion() {
         document.getElementById('usuarioForm').reset();
         document.getElementById('usuarioId').value = '';
@@ -246,7 +236,6 @@
         document.getElementById('cancelBtn').style.display = 'none';
     }
 
-    // Mostrar mensajes
     function mostrarMensaje(texto, color) {
         const div = document.getElementById('mensaje');
         div.innerHTML = `<p style="color:${color}">${texto}</p>`;

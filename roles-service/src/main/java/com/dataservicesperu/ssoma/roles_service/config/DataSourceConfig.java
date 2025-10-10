@@ -36,9 +36,37 @@ public class DataSourceConfig {
     private DataSource createDataSource(String schema) {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("org.postgresql.Driver");
-        dataSource.setUrl("jdbc:postgresql://localhost:5432/ssoma_db?currentSchema=" + schema);
-        dataSource.setUsername("postgres");
-        dataSource.setPassword("postgres");
+
+        // ✅ SIN DEFAULTS - lee directamente las variables
+        // Si no existen, lanzará excepción (lo cual es correcto)
+        String host = System.getenv("POSTGRES_HOST");
+        String port = System.getenv("POSTGRES_PORT");
+        String database = System.getenv("POSTGRES_DB");
+        String username = System.getenv("POSTGRES_USER");
+        String password = System.getenv("POSTGRES_PASSWORD");
+
+        // Validación (opcional pero recomendado)
+        if (host == null || port == null || database == null) {
+            throw new IllegalStateException(
+                    "Las variables de entorno POSTGRES_HOST, POSTGRES_PORT y POSTGRES_DB son obligatorias. " +
+                            "Deben definirse en docker-compose.yml"
+            );
+        }
+
+        String url = String.format("jdbc:postgresql://%s:%s/%s?currentSchema=%s",
+                host, port, database, schema);
+
+        System.out.println("========================================");
+        System.out.println("=== DATASOURCE CONFIGURADO ===");
+        System.out.println("Schema: " + schema);
+        System.out.println("URL: " + url);
+        System.out.println("User: " + username);
+        System.out.println("========================================");
+
+        dataSource.setUrl(url);
+        dataSource.setUsername(username);
+        dataSource.setPassword(password);
+
         return dataSource;
     }
 }

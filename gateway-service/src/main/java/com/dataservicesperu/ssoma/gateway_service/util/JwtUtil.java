@@ -43,9 +43,9 @@ public class JwtUtil {
     }
 
     /**
-     * Extrae el email (subject) del token
+     * Extrae el nombre de usuario (subject) del token
      */
-    public String extractEmail(String token) {
+    public String extractNombreUsuario(String token) {  // ✅ CAMBIADO
         return validateAndExtractClaims(token).getSubject();
     }
 

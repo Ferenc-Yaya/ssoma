@@ -1,6 +1,9 @@
 version: '3.8'
 
 services:
+  # =================================================================
+  # BASE DE DATOS POSTGRESQL
+  # =================================================================
   postgres:
     image: postgres:15-alpine
     container_name: ssoma-postgres
@@ -14,6 +17,85 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - ssoma-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =================================================================
+  # AUTH SERVICE (Puerto 8082)
+  # =================================================================
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: ssoma-auth-service
+    restart: always
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ssoma_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      JWT_SECRET: mi_secreto_jwt_super_seguro_2025
+      JWT_EXPIRATION: 86400000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ssoma-network
+
+  # =================================================================
+  # ROLES SERVICE (Puerto 8081)
+  # =================================================================
+  roles-service:
+    build:
+      context: ./roles-service
+      dockerfile: Dockerfile
+    container_name: ssoma-roles-service
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ssoma_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ssoma-network
+
+  # =================================================================
+  # GATEWAY SERVICE (Puerto 8080)
+  # =================================================================
+  gateway-service:
+    build:
+      context: ./gateway-service
+      dockerfile: Dockerfile
+    container_name: ssoma-gateway-service
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:8082
+      ROLES_SERVICE_URL: http://roles-service:8081
+      JWT_SECRET: mi_secreto_jwt_super_seguro_2025
+    depends_on:
+      - auth-service
+      - roles-service
+    networks:
+      - ssoma-network
 
 volumes:
   postgres_data:
+    driver: local
+
+networks:
+  ssoma-network:
+    driver: bridge

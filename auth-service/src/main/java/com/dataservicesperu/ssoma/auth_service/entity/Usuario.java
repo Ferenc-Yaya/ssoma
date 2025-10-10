@@ -15,7 +15,7 @@ public class Usuario {
     private UUID id;
 
     @Column(name = "nombre_usuario", nullable = false, unique = true)
-    private String email;
+    private String nombreUsuario;
 
     @Column(name = "password_hash", nullable = false)
     private String password;

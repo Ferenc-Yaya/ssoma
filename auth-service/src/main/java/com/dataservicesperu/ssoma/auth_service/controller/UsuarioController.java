@@ -4,6 +4,7 @@ import com.dataservicesperu.ssoma.auth_service.entity.Usuario;
 import com.dataservicesperu.ssoma.auth_service.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,17 +17,22 @@ import java.util.UUID;
 public class UsuarioController {
 
     private final UsuarioRepository usuarioRepository;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     // CREATE - Crear usuario
     @PostMapping
     public ResponseEntity<Usuario> crear(@RequestBody Usuario usuario) {
         try {
-            // Validar que no exista el email
-            if (usuarioRepository.findByEmail(usuario.getEmail()).isPresent()) {
+            // Validar que no exista el nombre de usuario
+            if (usuarioRepository.findByNombreUsuario(usuario.getNombreUsuario()).isPresent()) {  // ✅ CAMBIADO
                 return ResponseEntity.status(400).body(null);
             }
 
             usuario.setId(UUID.randomUUID());
+
+            // Hashear contraseña antes de guardar
+            usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
+
             Usuario guardado = usuarioRepository.save(usuario);
             return ResponseEntity.ok(guardado);
         } catch (Exception e) {
@@ -61,11 +67,11 @@ public class UsuarioController {
             UUID uuid = UUID.fromString(id);
             return usuarioRepository.findById(uuid)
                     .map(usuario -> {
-                        usuario.setEmail(usuarioActualizado.getEmail());
+                        usuario.setNombreUsuario(usuarioActualizado.getNombreUsuario());  // ✅ CAMBIADO
 
                         // Solo actualizar password si viene en el request
                         if (usuarioActualizado.getPassword() != null && !usuarioActualizado.getPassword().isEmpty()) {
-                            usuario.setPassword(usuarioActualizado.getPassword());
+                            usuario.setPassword(passwordEncoder.encode(usuarioActualizado.getPassword()));
                         }
 
                         usuario.setTenantId(usuarioActualizado.getTenantId());
