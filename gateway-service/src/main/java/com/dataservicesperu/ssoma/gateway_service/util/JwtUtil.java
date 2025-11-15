@@ -45,7 +45,7 @@ public class JwtUtil {
     /**
      * Extrae el nombre de usuario (subject) del token
      */
-    public String extractNombreUsuario(String token) {  // ✅ CAMBIADO
+    public String extractNombreUsuario(String token) {
         return validateAndExtractClaims(token).getSubject();
     }
 
@@ -55,5 +55,23 @@ public class JwtUtil {
     public String extractRole(String token) {
         Claims claims = validateAndExtractClaims(token);
         return claims.get("role", String.class);
+    }
+
+    /**
+     * Extrae la información de superadmin del token
+     */
+    public Boolean extractIsSuperAdmin(String token) {
+        Claims claims = validateAndExtractClaims(token);
+        Object isSuperAdmin = claims.get("is_super_admin");
+
+        if (isSuperAdmin == null) {
+            return false; // Si no existe el claim, no es superadmin
+        }
+
+        if (isSuperAdmin instanceof Boolean) {
+            return (Boolean) isSuperAdmin;
+        }
+
+        return Boolean.valueOf(isSuperAdmin.toString());
     }
 }

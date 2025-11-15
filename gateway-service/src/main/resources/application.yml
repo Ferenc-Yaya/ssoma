@@ -33,5 +33,90 @@ spring:
           filters:
             - StripPrefix=1
 
+        # Nuevas rutas para los nuevos microservicios
+        - id: personas-route
+          uri: ${PERSONAS_SERVICE_URL}
+          predicates:
+            - Path=/api/personas/**
+          filters:
+            - StripPrefix=1
+
+        - id: salud-route
+          uri: ${PERSONAS_SERVICE_URL}
+          predicates:
+            - Path=/api/salud/**
+          filters:
+            - StripPrefix=1
+
+        - id: certificaciones-route
+          uri: ${PERSONAS_SERVICE_URL}
+          predicates:
+            - Path=/api/certificaciones/**
+          filters:
+            - StripPrefix=1
+
+        - id: activos-route
+          uri: ${ACTIVOS_SERVICE_URL}
+          predicates:
+            - Path=/api/activos/**
+          filters:
+            - StripPrefix=1
+
+        - id: asignaciones-route
+          uri: ${ACTIVOS_SERVICE_URL}
+          predicates:
+            - Path=/api/asignaciones/**
+          filters:
+            - StripPrefix=1
+
+        - id: documentos-route
+          uri: ${DOCUMENTAL_SERVICE_URL}
+          predicates:
+            - Path=/api/documentos/**
+          filters:
+            - StripPrefix=1
+
+        - id: storage-route
+          uri: ${DOCUMENTAL_SERVICE_URL}
+          predicates:
+            - Path=/api/storage/**
+          filters:
+            - StripPrefix=1
+
+        - id: permisos-trabajo-route
+          uri: ${BPM_SERVICE_URL}
+          predicates:
+            - Path=/api/permisos-trabajo/**
+          filters:
+            - StripPrefix=1
+
+        - id: ats-route
+          uri: ${BPM_SERVICE_URL}
+          predicates:
+            - Path=/api/ats/**
+          filters:
+            - StripPrefix=1
+
+        - id: reglas-route
+          uri: ${COMPLIANCE_SERVICE_URL}
+          predicates:
+            - Path=/api/reglas/**
+          filters:
+            - StripPrefix=1
+
+        - id: validaciones-route
+          uri: ${COMPLIANCE_SERVICE_URL}
+          predicates:
+            - Path=/api/validaciones/**
+          filters:
+            - StripPrefix=1
+
+        - id: notificaciones-route
+          uri: ${NOTIFICATIONS_SERVICE_URL}
+          predicates:
+            - Path=/api/notificaciones/**
+          filters:
+            - StripPrefix=1
+
 jwt:
   secret: ${JWT_SECRET}

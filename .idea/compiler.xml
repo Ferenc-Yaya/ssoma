@@ -8,9 +8,9 @@
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.40/lombok-1.18.40.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.40/lombok-1.18.40.jar" />
         </processorPath>
         <module name="auth-service" />
-        <module name="roles-service" />
       </profile>
       <profile name="Maven default annotation processors profile" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -18,12 +18,41 @@
         <outputRelativeToContentRoot value="true" />
         <module name="gateway-service" />
       </profile>
+      <profile name="Annotation profile for roles-service" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.40/lombok-1.18.40.jar" />
+        </processorPath>
+        <module name="roles-service" />
+      </profile>
+      <profile name="Annotation profile for notifications-service" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
+        </processorPath>
+        <module name="personas-service" />
+        <module name="documental-service" />
+        <module name="compliance-service" />
+        <module name="bpm-service" />
+        <module name="notifications-service" />
+        <module name="activos-service" />
+      </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="activos-service" options="-parameters" />
       <module name="auth-service" options="-parameters" />
+      <module name="bpm-service" options="-parameters" />
+      <module name="compliance-service" options="-parameters" />
+      <module name="documental-service" options="-parameters" />
       <module name="gateway-service" options="-parameters" />
+      <module name="notifications-service" options="-parameters" />
+      <module name="personas-service" options="-parameters" />
       <module name="roles-service" options="-parameters" />
     </option>
   </component>

@@ -29,10 +29,11 @@ public class JwtUtil {
     /**
      * Genera un JWT con tenant_id como claim
      */
-    public String generateToken(String nombreUsuario, String tenantId, String role) {
+    public String generateToken(String nombreUsuario, String tenantId, String role, Boolean isSuperAdmin) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("tenant_id", tenantId);
         claims.put("role", role);
+        claims.put("is_super_admin", isSuperAdmin);  // Nuevo campo
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -43,6 +44,16 @@ public class JwtUtil {
                 .compact();
     }
 
+    // Agregar método para extraer la info de superadmin
+    public Boolean extractIsSuperAdmin(String token) {
+        Claims claims = validateToken(token);
+        return claims.get("is_super_admin", Boolean.class);
+    }
+
+    public String extractRole(String token) {
+        Claims claims = validateToken(token);
+        return claims.get("role", String.class);
+    }
     /**
      * Valida el token y retorna los claims
      */

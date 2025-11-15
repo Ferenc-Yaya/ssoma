@@ -53,11 +53,12 @@ public class AuthService {
 
         System.out.println("✅ Autenticación exitosa, generando JWT...");
 
-        // Generar JWT con tenant_id
+        // Dentro del método login()
         String token = jwtUtil.generateToken(
-                usuario.getNombreUsuario(),  // ✅ CAMBIADO
+                usuario.getNombreUsuario(),
                 usuario.getTenantId(),
-                usuario.getRole()
+                usuario.getRole(),
+                usuario.getIsSuperAdmin()  // Nuevo campo
         );
 
         System.out.println("✅ JWT generado: " + token.substring(0, 50) + "...");
@@ -65,9 +66,10 @@ public class AuthService {
 
         return new LoginResponse(
                 token,
-                usuario.getNombreUsuario(),  // ✅ CAMBIADO
+                usuario.getNombreUsuario(),
                 usuario.getTenantId(),
-                usuario.getRole()
+                usuario.getRole(),
+                usuario.getIsSuperAdmin()  // Nuevo campo
         );
     }
 }

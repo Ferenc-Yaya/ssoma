@@ -26,6 +26,27 @@ services:
       retries: 5
 
   # =================================================================
+  # RABBITMQ (para sistema de mensajería asíncrona)
+  # =================================================================
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: ssoma-rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"  # Puerto para AMQP
+      - "15672:15672"  # Puerto para la interfaz de administración
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbit
+      RABBITMQ_DEFAULT_PASS: rabbit
+    networks:
+      - ssoma-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =================================================================
   # AUTH SERVICE (Puerto 8082)
   # =================================================================
   auth-service:
@@ -72,6 +93,173 @@ services:
       - ssoma-network
 
   # =================================================================
+  # PERSONAS SERVICE (Puerto 8083)
+  # =================================================================
+  personas-service:
+    build:
+      context: ./personas-service
+      dockerfile: Dockerfile
+    container_name: ssoma-personas-service
+    restart: always
+    ports:
+      - "8083:8083"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ssoma_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ssoma-network
+
+  # =================================================================
+  # ACTIVOS SERVICE (Puerto 8084)
+  # =================================================================
+  activos-service:
+    build:
+      context: ./activos-service
+      dockerfile: Dockerfile
+    container_name: ssoma-activos-service
+    restart: always
+    ports:
+      - "8084:8084"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ssoma_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ssoma-network
+
+  # =================================================================
+  # DOCUMENTAL SERVICE (Puerto 8085)
+  # =================================================================
+  documental-service:
+    build:
+      context: ./documental-service
+      dockerfile: Dockerfile
+    container_name: ssoma-documental-service
+    restart: always
+    ports:
+      - "8085:8085"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ssoma_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      DO_SPACES_ACCESS_KEY: ${DO_SPACES_ACCESS_KEY}
+      DO_SPACES_SECRET_KEY: ${DO_SPACES_SECRET_KEY}
+      DO_SPACES_REGION: ${DO_SPACES_REGION}
+      DO_SPACES_ENDPOINT: ${DO_SPACES_ENDPOINT}
+      DO_SPACES_BUCKET: ${DO_SPACES_BUCKET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ssoma-network
+
+  # =================================================================
+  # BPM SERVICE (Puerto 8086)
+  # =================================================================
+  bpm-service:
+    build:
+      context: ./bpm-service
+      dockerfile: Dockerfile
+    container_name: ssoma-bpm-service
+    restart: always
+    ports:
+      - "8086:8086"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ssoma_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      COMPLIANCE_SERVICE_URL: http://compliance-service:8087
+      PERSONAS_SERVICE_URL: http://personas-service:8083
+      NOTIFICATIONS_SERVICE_URL: http://notifications-service:8088
+    depends_on:
+      postgres:
+        condition: service_healthy
+      compliance-service:
+        condition: service_started
+    networks:
+      - ssoma-network
+
+  # =================================================================
+  # COMPLIANCE SERVICE (Puerto 8087)
+  # =================================================================
+  compliance-service:
+    build:
+      context: ./compliance-service
+      dockerfile: Dockerfile
+    container_name: ssoma-compliance-service
+    restart: always
+    ports:
+      - "8087:8087"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ssoma_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      ACTIVOS_SERVICE_URL: http://activos-service:8084
+      PERSONAS_SERVICE_URL: http://personas-service:8083
+      DOCUMENTAL_SERVICE_URL: http://documental-service:8085
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: rabbit
+      RABBITMQ_PASSWORD: rabbit
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - ssoma-network
+
+  # =================================================================
+  # NOTIFICATIONS SERVICE (Puerto 8088)
+  # =================================================================
+  notifications-service:
+    build:
+      context: ./notifications-service
+      dockerfile: Dockerfile
+    container_name: ssoma-notifications-service
+    restart: always
+    ports:
+      - "8088:8088"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ssoma_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: rabbit
+      RABBITMQ_PASSWORD: rabbit
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - ssoma-network
+
+  # =================================================================
   # GATEWAY SERVICE (Puerto 8080)
   # =================================================================
   gateway-service:
@@ -85,10 +273,22 @@ services:
     environment:
       AUTH_SERVICE_URL: http://auth-service:8082
       ROLES_SERVICE_URL: http://roles-service:8081
+      PERSONAS_SERVICE_URL: http://personas-service:8083
+      ACTIVOS_SERVICE_URL: http://activos-service:8084
+      DOCUMENTAL_SERVICE_URL: http://documental-service:8085
+      BPM_SERVICE_URL: http://bpm-service:8086
+      COMPLIANCE_SERVICE_URL: http://compliance-service:8087
+      NOTIFICATIONS_SERVICE_URL: http://notifications-service:8088
       JWT_SECRET: mi_secreto_jwt_super_seguro_2025
     depends_on:
       - auth-service
       - roles-service
+      - personas-service
+      - activos-service
+      - documental-service
+      - bpm-service
+      - compliance-service
+      - notifications-service
     networks:
       - ssoma-network
 

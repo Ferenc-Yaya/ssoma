@@ -7,6 +7,12 @@
         <option value="$PROJECT_DIR$/auth-service/pom.xml" />
         <option value="$PROJECT_DIR$/roles-service/pom.xml" />
         <option value="$PROJECT_DIR$/gateway-service/pom.xml" />
+        <option value="$PROJECT_DIR$/personas-service/pom.xml" />
+        <option value="$PROJECT_DIR$/activos-service/pom.xml" />
+        <option value="$PROJECT_DIR$/documental-service/pom.xml" />
+        <option value="$PROJECT_DIR$/bpm-service/pom.xml" />
+        <option value="$PROJECT_DIR$/compliance-service/pom.xml" />
+        <option value="$PROJECT_DIR$/notifications-service/pom.xml" />
       </list>
     </option>
   </component>

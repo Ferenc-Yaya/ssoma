@@ -54,15 +54,6 @@ INSERT INTO tenant_a.tbl_roles (nombre_rol, descripcion) VALUES
 INSERT INTO tenant_b.tbl_roles (nombre_rol, descripcion) VALUES
     ('Contratista', 'Personal contratista con acceso limitado al sistema');
 
--- Usuarios de prueba
--- Password para todos: "123456" (hasheado con BCrypt)
--- Hash: $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
-
-INSERT INTO public.tbl_usuarios (nombre_usuario, password_hash, tenant_id, rol) VALUES
-    ('admin@kallpa.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'tenant_a', 'ADMIN'),
-    ('supervisor@kallpa.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'tenant_a', 'USER'),
-    ('contratista@empresa.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'tenant_b', 'USER');
-
 -- -----------------------------------------------------------------
 -- 6. VERIFICACIÓN
 -- -----------------------------------------------------------------

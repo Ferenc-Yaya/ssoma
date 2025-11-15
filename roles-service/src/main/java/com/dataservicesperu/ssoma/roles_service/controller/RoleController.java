@@ -1,8 +1,10 @@
 package com.dataservicesperu.ssoma.roles_service.controller;
 
+import com.dataservicesperu.ssoma.roles_service.config.CurrentTenantHolder;
 import com.dataservicesperu.ssoma.roles_service.entity.Role;
 import com.dataservicesperu.ssoma.roles_service.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.dataservicesperu.ssoma.roles_service.service.SuperAdminRoleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,8 +18,16 @@ public class RoleController {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private SuperAdminRoleService superAdminRoleService;
+
     @GetMapping
     public List<Role> getAllRoles() {
+        // Si es superadmin, obtener roles de todos los schemas
+        if (CurrentTenantHolder.isSuperAdmin()) {
+            return superAdminRoleService.getAllRolesFromAllTenants();
+        }
+        // Si no, obtener solo los del tenant actual
         return roleRepository.findAll();
     }
 

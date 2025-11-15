@@ -9,4 +9,5 @@ public class LoginResponse {
     private String nombreUsuario;
     private String tenantId;
     private String role;
+    private Boolean isSuperAdmin;
 }

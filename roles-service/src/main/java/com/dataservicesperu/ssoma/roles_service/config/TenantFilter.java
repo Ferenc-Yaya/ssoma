@@ -15,12 +15,22 @@ public class TenantFilter implements Filter {
 
         HttpServletRequest req = (HttpServletRequest) request;
         String tenantId = req.getHeader("X-Tenant-ID");
+        String isSuperAdmin = req.getHeader("X-Super-Admin");
 
-        if (tenantId != null) {
+        // Si es super admin, establecemos el flag pero mantenemos el tenant
+        if ("true".equals(isSuperAdmin)) {
+            CurrentTenantHolder.setSuperAdmin(true);
             CurrentTenantHolder.setTenantId(tenantId);
+            System.out.println("🚨 Super Admin detectado - Tenant: " + tenantId);
+        } else if (tenantId != null) {
+            CurrentTenantHolder.setSuperAdmin(false);
+            CurrentTenantHolder.setTenantId(tenantId);
+            System.out.println("👤 Usuario normal - Tenant: " + tenantId);
         } else {
             // Esquema por defecto para pruebas internas
+            CurrentTenantHolder.setSuperAdmin(false);
             CurrentTenantHolder.setTenantId("public");
+            System.out.println("⚠️ Sin tenant especificado, usando 'public'");
         }
 
         try {

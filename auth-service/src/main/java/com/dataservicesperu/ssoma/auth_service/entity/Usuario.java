@@ -14,6 +14,9 @@ public class Usuario {
     @Column(name = "usuario_id")
     private UUID id;
 
+    @Column(name = "is_super_admin", nullable = false)
+    private Boolean isSuperAdmin = false;
+
     @Column(name = "nombre_usuario", nullable = false, unique = true)
     private String nombreUsuario;
 

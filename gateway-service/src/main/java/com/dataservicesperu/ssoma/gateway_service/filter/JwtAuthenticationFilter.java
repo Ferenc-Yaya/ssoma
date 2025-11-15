@@ -37,17 +37,24 @@ public class JwtAuthenticationFilter implements WebFilter {
         try {
             String token = authHeader.substring(7);
             String tenantId = jwtUtil.extractTenantId(token);
-            String nombreUsuario = jwtUtil.extractNombreUsuario(token);  // ✅ CAMBIADO
+            String nombreUsuario = jwtUtil.extractNombreUsuario(token);
             String role = jwtUtil.extractRole(token);
+            Boolean isSuperAdmin = jwtUtil.extractIsSuperAdmin(token);
 
             System.out.println("=== GATEWAY - REQUEST INTERCEPTADO ===");
             System.out.println("Path: " + path);
-            System.out.println("Usuario: " + nombreUsuario);  // ✅ CAMBIADO
+            System.out.println("Usuario: " + nombreUsuario);
             System.out.println("Tenant ID: " + tenantId);
             System.out.println("Role: " + role);
+            System.out.println("Es SuperAdmin: " + isSuperAdmin);
 
             ServerWebExchange modifiedExchange = exchange.mutate()
-                    .request(builder -> builder.header("X-Tenant-ID", tenantId))
+                    .request(builder -> {
+                        builder.header("X-Tenant-ID", tenantId);
+                        if (Boolean.TRUE.equals(isSuperAdmin)) {
+                            builder.header("X-Super-Admin", "true");
+                        }
+                    })
                     .build();
 
             return chain.filter(modifiedExchange);
