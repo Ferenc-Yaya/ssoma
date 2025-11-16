@@ -258,7 +258,28 @@ services:
         condition: service_healthy
     networks:
       - ssoma-network
-
+  # =================================================================
+  # EMPRESAS SERVICE (Puerto 8089)
+  # =================================================================
+  empresas-service:
+    build:
+      context: ./empresas-service
+      dockerfile: Dockerfile
+    container_name: ssoma-empresas-service
+    restart: always
+    ports:
+      - "8089:8089"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ssoma_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ssoma-network
   # =================================================================
   # GATEWAY SERVICE (Puerto 8080)
   # =================================================================
@@ -279,6 +300,7 @@ services:
       BPM_SERVICE_URL: http://bpm-service:8086
       COMPLIANCE_SERVICE_URL: http://compliance-service:8087
       NOTIFICATIONS_SERVICE_URL: http://notifications-service:8088
+      EMPRESAS_SERVICE_URL: http://empresas-service:8089
       JWT_SECRET: mi_secreto_jwt_super_seguro_2025
     depends_on:
       - auth-service
@@ -289,6 +311,7 @@ services:
       - bpm-service
       - compliance-service
       - notifications-service
+      - empresas-service
     networks:
       - ssoma-network
 

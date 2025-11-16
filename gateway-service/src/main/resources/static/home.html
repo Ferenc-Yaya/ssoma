@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema SSOMA - Inicio</title>
+</head>
+<body>
+<h1>Sistema de Gestión SSOMA</h1>
+
+<p>Bienvenido al sistema de gestión. Seleccione una opción:</p>
+
+<ul>
+    <li><h3><a href="empresas.html">Gestión de Empresas</a></h3></li>
+    <li><h3><a href="personas.html">Gestión de Personas</a></h3></li>
+    <li><h3><a href="usuarios.html">Gestión de Usuarios</a></h3></li>
+</ul>
+
+<hr>
+
+<p><a href="login.html">Cerrar Sesión</a></p>
+
+<script>
+    // Verificar si hay token al cargar
+    window.onload = function() {
+        const token = localStorage.getItem('jwt_token');
+        if (!token) {
+            alert('Debe iniciar sesión primero');
+            window.location.href = 'login.html';
+        }
+    };
+</script>
+</body>
+</html>

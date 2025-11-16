@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Gestión de Personas</title>
+</head>
+<body>
+<h1>Gestión de Personas</h1>
+
+<h2>Crear/Editar Persona</h2>
+<form id="personaForm">
+    <input type="hidden" id="personaId">
+
+    <p>
+        <label>Empresa:</label><br>
+        <select id="empresaId" required>
+            <option value="">Cargando empresas...</option>
+        </select>
+    </p>
+
+    <p>
+        <label>Tipo de Persona:</label><br>
+        <select id="tipoPersona" required>
+            <option value="">Seleccione...</option>
+            <option value="TRABAJADOR">Trabajador</option>
+            <option value="CONTRATISTA">Contratista</option>
+            <option value="VISITANTE">Visitante</option>
+        </select>
+    </p>
+
+    <p>
+        <label>Nombre Completo:</label><br>
+        <input type="text" id="nombreCompleto" required>
+    </p>
+
+    <p>
+        <label>DNI (8 dígitos):</label><br>
+        <input type="text" id="dni" maxlength="8" required>
+    </p>
+
+    <p>
+        <label>Fecha de Nacimiento:</label><br>
+        <input type="date" id="fechaNacimiento">
+    </p>
+
+    <p>
+        <label>Género:</label><br>
+        <select id="genero">
+            <option value="">Seleccione...</option>
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+            <option value="Otro">Otro</option>
+        </select>
+    </p>
+
+    <p>
+        <label>Teléfono:</label><br>
+        <input type="text" id="telefono">
+    </p>
+
+    <p>
+        <label>Correo:</label><br>
+        <input type="email" id="correo">
+    </p>
+
+    <button type="submit" id="submitBtn">Crear Persona</button>
+    <button type="button" id="cancelBtn" onclick="cancelarEdicion()" style="display:none">Cancelar</button>
+</form>
+
+<hr>
+
+<h2>Lista de Personas</h2>
+<button onclick="cargarPersonas()">Recargar Lista</button>
+<br><br>
+<table border="1" cellpadding="10">
+    <thead>
+    <tr>
+        <th>Tipo</th>
+        <th>Nombre Completo</th>
+        <th>DNI</th>
+        <th>Fecha Nacimiento</th>
+        <th>Género</th>
+        <th>Teléfono</th>
+        <th>Correo</th>
+        <th>Acciones</th>
+    </tr>
+    </thead>
+    <tbody id="personasTable">
+    <tr>
+        <td colspan="8">Cargando...</td>
+    </tr>
+    </tbody>
+</table>
+
+<hr>
+
+<div id="mensaje"></div>
+
+<hr>
+
+<p>
+    <a href="home.html">Volver al Inicio</a> | 
+    <a href="login.html">Cerrar Sesión</a>
+</p>
+
+<script>
+    const API_PERSONAS = 'http://localhost:8080/api/personas';
+    const API_EMPRESAS = 'http://localhost:8080/api/empresas';
+
+    function getToken() {
+        return localStorage.getItem('jwt_token');
+    }
+
+    function getAuthHeaders() {
+        const token = getToken();
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        return headers;
+    }
+
+    window.onload = function() {
+        const token = getToken();
+        if (!token) {
+            alert('Debe iniciar sesión primero');
+            window.location.href = 'login.html';
+            return;
+        }
+        cargarEmpresas();
+        cargarPersonas();
+    };
+
+    async function cargarEmpresas() {
+        try {
+            const response = await fetch(API_EMPRESAS, {
+                headers: getAuthHeaders()
+            });
+
+            const empresas = await response.json();
+            const select = document.getElementById('empresaId');
+            
+            select.innerHTML = '<option value="">Seleccione empresa...</option>';
+            
+            empresas.forEach(empresa => {
+                const option = document.createElement('option');
+                option.value = empresa.empresaId;
+                option.textContent = empresa.nombreEmpresa;
+                select.appendChild(option);
+            });
+        } catch (error) {
+            mostrarMensaje('Error al cargar empresas: ' + error.message, 'red');
+        }
+    }
+
+    async function cargarPersonas() {
+        try {
+            const response = await fetch(API_PERSONAS, {
+                headers: getAuthHeaders()
+            });
+
+            const personas = await response.json();
+
+            const tbody = document.getElementById('personasTable');
+            tbody.innerHTML = '';
+
+            if (personas.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8">No hay personas</td></tr>';
+                return;
+            }
+
+            personas.forEach(persona => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${persona.tipoPersona || '-'}</td>
+                    <td>${persona.nombreCompleto}</td>
+                    <td>${persona.dni}</td>
+                    <td>${persona.fechaNacimiento || '-'}</td>
+                    <td>${persona.genero || '-'}</td>
+                    <td>${persona.telefono || '-'}</td>
+                    <td>${persona.correo || '-'}</td>
+                    <td>
+                        <button onclick="editarPersona('${persona.personaId}')">Editar</button>
+                        <button onclick="eliminarPersona('${persona.personaId}', '${persona.nombreCompleto}')">Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch (error) {
+            mostrarMensaje('Error al cargar personas: ' + error.message, 'red');
+        }
+    }
+
+    document.getElementById('personaForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const personaId = document.getElementById('personaId').value;
+        const empresaId = document.getElementById('empresaId').value;
+        const tipoPersona = document.getElementById('tipoPersona').value;
+        const nombreCompleto = document.getElementById('nombreCompleto').value;
+        const dni = document.getElementById('dni').value;
+        const fechaNacimiento = document.getElementById('fechaNacimiento').value;
+        const genero = document.getElementById('genero').value;
+        const telefono = document.getElementById('telefono').value;
+        const correo = document.getElementById('correo').value;
+
+        // Validar DNI
+        if (dni.length < 8) {
+            mostrarMensaje('El DNI debe tener al menos 8 dígitos', 'red');
+            return;
+        }
+
+        const data = {
+            empresaId: empresaId,
+            tipoPersona: tipoPersona,
+            nombreCompleto: nombreCompleto,
+            dni: dni,
+            fechaNacimiento: fechaNacimiento || null,
+            genero: genero || null,
+            telefono: telefono || null,
+            correo: correo || null
+        };
+
+        try {
+            let response;
+
+            if (personaId) {
+                // Actualizar
+                data.personaId = personaId;
+                response = await fetch(`${API_PERSONAS}/${personaId}`, {
+                    method: 'PUT',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+            } else {
+                // Crear
+                response = await fetch(API_PERSONAS, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(data)
+                });
+            }
+
+            if (response.ok) {
+                mostrarMensaje(personaId ? 'Persona actualizada' : 'Persona creada', 'green');
+                document.getElementById('personaForm').reset();
+                document.getElementById('personaId').value = '';
+                document.getElementById('submitBtn').textContent = 'Crear Persona';
+                document.getElementById('cancelBtn').style.display = 'none';
+                cargarPersonas();
+            } else {
+                const error = await response.text();
+                mostrarMensaje('Error: ' + error, 'red');
+            }
+        } catch (error) {
+            mostrarMensaje('Error de conexión: ' + error.message, 'red');
+        }
+    });
+
+    async function editarPersona(id) {
+        try {
+            const response = await fetch(`${API_PERSONAS}/${id}`, {
+                headers: getAuthHeaders()
+            });
+            const persona = await response.json();
+
+            document.getElementById('personaId').value = persona.personaId;
+            document.getElementById('empresaId').value = persona.empresaId;
+            document.getElementById('tipoPersona').value = persona.tipoPersona || '';
+            document.getElementById('nombreCompleto').value = persona.nombreCompleto;
+            document.getElementById('dni').value = persona.dni;
+            document.getElementById('fechaNacimiento').value = persona.fechaNacimiento || '';
+            document.getElementById('genero').value = persona.genero || '';
+            document.getElementById('telefono').value = persona.telefono || '';
+            document.getElementById('correo').value = persona.correo || '';
+            document.getElementById('submitBtn').textContent = 'Actualizar Persona';
+            document.getElementById('cancelBtn').style.display = 'inline';
+
+            window.scrollTo(0, 0);
+        } catch (error) {
+            mostrarMensaje('Error al cargar persona: ' + error.message, 'red');
+        }
+    }
+
+    async function eliminarPersona(id, nombreCompleto) {
+        if (!confirm(`¿Está seguro de eliminar a ${nombreCompleto}?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_PERSONAS}/${id}`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
+
+            if (response.ok) {
+                mostrarMensaje('Persona eliminada', 'green');
+                cargarPersonas();
+            } else {
+                mostrarMensaje('Error al eliminar persona', 'red');
+            }
+        } catch (error) {
+            mostrarMensaje('Error de conexión: ' + error.message, 'red');
+        }
+    }
+
+    function cancelarEdicion() {
+        document.getElementById('personaForm').reset();
+        document.getElementById('personaId').value = '';
+        document.getElementById('submitBtn').textContent = 'Crear Persona';
+        document.getElementById('cancelBtn').style.display = 'none';
+    }
+
+    function mostrarMensaje(texto, color) {
+        const div = document.getElementById('mensaje');
+        div.innerHTML = `<p style="color:${color}">${texto}</p>`;
+        setTimeout(() => { div.innerHTML = ''; }, 3000);
+    }
+</script>
+</body>
+</html>

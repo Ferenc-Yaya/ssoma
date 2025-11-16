@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login</title>
+    <meta charset="UTF-8">
+    <title>Login - Sistema SSOMA</title>
 </head>
 <body>
-<h1>Login</h1>
+<h1>Sistema SSOMA - Login</h1>
 
 <form id="loginForm">
     <p>
@@ -17,7 +18,7 @@
         <input type="password" id="password" required>
     </p>
 
-    <button type="submit">Login</button>
+    <button type="submit">Iniciar Sesión</button>
 </form>
 
 <hr>
@@ -40,7 +41,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ nombreUsuario, password })  // ✅ CAMBIADO
+                body: JSON.stringify({ nombreUsuario, password })
             });
 
             if (response.ok) {
@@ -54,9 +55,13 @@
                     <p><strong>Usuario:</strong> ${data.nombreUsuario}</p>
                     <p><strong>Tenant ID:</strong> ${data.tenantId}</p>
                     <p><strong>Role:</strong> ${data.role}</p>
-                    <p><strong>Token:</strong><br>${data.token}</p>
-                    <p><a href="usuarios.html">Ir a Gestión de Usuarios</a></p>
+                    <p>Redirigiendo al sistema...</p>
                 `;
+
+                // Redirigir automáticamente después de 1 segundo
+                setTimeout(() => {
+                    window.location.href = 'home.html';
+                }, 1000);
             } else {
                 responseDiv.innerHTML = '<p style="color:red">Error: Usuario o contraseña incorrectos</p>';
             }

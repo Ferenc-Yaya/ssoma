@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>CRUD Usuarios</title>
+    <meta charset="UTF-8">
+    <title>Gestión de Usuarios</title>
 </head>
 <body>
 <h1>Gestión de Usuarios</h1>
@@ -71,7 +72,10 @@
 
 <hr>
 
-<p><a href="login.html">Ir al Login</a></p>
+<p>
+    <a href="home.html">Volver al Inicio</a> | 
+    <a href="login.html">Cerrar Sesión</a>
+</p>
 
 <script>
     const API_URL = 'http://localhost:8080/api/usuarios';
@@ -92,6 +96,12 @@
     }
 
     window.onload = function() {
+        const token = getToken();
+        if (!token) {
+            alert('Debe iniciar sesión primero');
+            window.location.href = 'login.html';
+            return;
+        }
         cargarUsuarios();
     };
 
