@@ -15,7 +15,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "tbl_empresas")
 @Data
-@EqualsAndHashCode(exclude = {"contactos", "servicios", "empresaTipos"})
+@EqualsAndHashCode(exclude = {"contactos", "servicios", "tipos"})
 @NoArgsConstructor
 @AllArgsConstructor
 public class Empresa {

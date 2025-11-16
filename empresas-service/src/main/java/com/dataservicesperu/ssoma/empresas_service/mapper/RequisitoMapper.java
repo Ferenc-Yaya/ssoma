@@ -1,17 +1,17 @@
 package com.dataservicesperu.ssoma.empresas_service.mapper;
 
-import com.dataservicesperu.ssoma.empresas_service.dto.CategoriaDTO;
-import com.dataservicesperu.ssoma.empresas_service.entity.Categoria;
+import com.dataservicesperu.ssoma.empresas_service.dto.RequisitoDTO;
+import com.dataservicesperu.ssoma.empresas_service.entity.Requisito;
 import org.mapstruct.*;
 
 import java.util.List;
 
 @Mapper(componentModel = "spring",
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-public interface CategoriaMapper {
+public interface RequisitoMapper {
 
     @Mapping(target = "aplica", ignore = true) // Se establece manualmente según contexto
-    CategoriaDTO toDTO(Categoria categoria);
+    RequisitoDTO toDTO(Requisito requisito);
 
-    List<CategoriaDTO> toDTOList(List<Categoria> categorias);
+    List<RequisitoDTO> toDTOList(List<Requisito> requisitos);
 }

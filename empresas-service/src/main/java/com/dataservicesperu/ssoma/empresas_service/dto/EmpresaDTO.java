@@ -24,5 +24,5 @@ public class EmpresaDTO {
     // Relaciones
     private List<ContactoDTO> contactos;
     private List<ServicioDTO> servicios;
-    private List<TipoContratistaDTO> tipos;
+    private List<TipoEmpresaDTO> tipos;
 }

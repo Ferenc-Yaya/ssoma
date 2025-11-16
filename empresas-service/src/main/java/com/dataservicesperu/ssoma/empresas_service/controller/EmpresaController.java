@@ -2,7 +2,7 @@ package com.dataservicesperu.ssoma.empresas_service.controller;
 
 import com.dataservicesperu.ssoma.empresas_service.dto.CreateEmpresaDTO;
 import com.dataservicesperu.ssoma.empresas_service.dto.EmpresaDTO;
-import com.dataservicesperu.ssoma.empresas_service.dto.TipoContratistaDTO;
+import com.dataservicesperu.ssoma.empresas_service.dto.TipoEmpresaDTO;
 import com.dataservicesperu.ssoma.empresas_service.service.EmpresaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -91,10 +91,10 @@ public class EmpresaController {
         }
     }
 
-    @GetMapping("/tipos-contratista")
-    public ResponseEntity<List<TipoContratistaDTO>> listarTiposContratista() {
-        log.info("GET /empresas/tipos-contratista - Listar tipos");
-        List<TipoContratistaDTO> tipos = empresaService.listarTiposContratista();
+    @GetMapping("/tipos-empresa")
+    public ResponseEntity<List<TipoEmpresaDTO>> listarTiposEmpresa() {
+        log.info("GET /empresas/tipos-empresa - Listar tipos");
+        List<TipoEmpresaDTO> tipos = empresaService.listarTiposEmpresa();
         return ResponseEntity.ok(tipos);
     }
 }

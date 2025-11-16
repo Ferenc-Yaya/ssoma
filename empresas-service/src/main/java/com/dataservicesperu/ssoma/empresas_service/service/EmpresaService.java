@@ -21,15 +21,15 @@ public class EmpresaService {
     private final EmpresaRepository empresaRepository;
     private final EmpresaContactoRepository contactoRepository;
     private final EmpresaServicioRepository servicioRepository;
-    private final TipoContratistaRepository tipoContratistaRepository;
+    private final TipoEmpresaRepository tipoEmpresaRepository;
     private final EmpresaTipoRepository empresaTipoRepository;
-    private final TipoCategoriaRepository tipoCategoriaRepository;
+    private final TipoRequisitoRepository tipoRequisitoRepository;
 
     private final EmpresaMapper empresaMapper;
     private final ContactoMapper contactoMapper;
     private final ServicioMapper servicioMapper;
-    private final TipoContratistaMapper tipoContratistaMapper;
-    private final CategoriaMapper categoriaMapper;
+    private final TipoEmpresaMapper tipoEmpresaMapper;
+    private final RequisitoMapper requisitoMapper;
 
     @Transactional
     public EmpresaDTO crearEmpresa(CreateEmpresaDTO dto) {
@@ -63,14 +63,14 @@ public class EmpresaService {
         // Guardar empresa
         empresaRepository.save(empresa);
 
-        // Asignar tipo de contratista (ÚNICO)
-        if (dto.getTipoContratistaId() != null) {
-            TipoContratista tipo = tipoContratistaRepository.findById(dto.getTipoContratistaId())
-                    .orElseThrow(() -> new IllegalArgumentException("Tipo de contratista no encontrado: " + dto.getTipoContratistaId()));
+        // Asignar tipo de empresa (ÚNICO)
+        if (dto.getTipoEmpresaId() != null) {
+            TipoEmpresa tipo = tipoEmpresaRepository.findById(dto.getTipoEmpresaId())
+                    .orElseThrow(() -> new IllegalArgumentException("Tipo de empresa no encontrado: " + dto.getTipoEmpresaId()));
 
             EmpresaTipo empresaTipo = new EmpresaTipo();
             empresaTipo.setEmpresa(empresa);
-            empresaTipo.setTipoContratista(tipo);
+            empresaTipo.setTipoEmpresa(tipo);
             empresaTipo.setActivo(true);
 
             empresaTipoRepository.save(empresaTipo);
@@ -88,7 +88,7 @@ public class EmpresaService {
                 .orElseThrow(() -> new IllegalArgumentException("Empresa no encontrada: " + empresaId));
 
         EmpresaDTO dto = empresaMapper.toDTO(empresa);
-        List<TipoContratistaDTO> tiposDTO = obtenerTiposConCategorias(empresaId);
+        List<TipoEmpresaDTO> tiposDTO = obtenerTiposConRequisitos(empresaId);
         dto.setTipos(tiposDTO);
 
         return dto;
@@ -102,7 +102,7 @@ public class EmpresaService {
         return empresas.stream()
                 .map(empresa -> {
                     EmpresaDTO dto = empresaMapper.toDTO(empresa);
-                    dto.setTipos(obtenerTiposConCategorias(empresa.getEmpresaId()));
+                    dto.setTipos(obtenerTiposConRequisitos(empresa.getEmpresaId()));
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -146,8 +146,8 @@ public class EmpresaService {
             }
         }
 
-        // === ACTUALIZAR TIPO DE CONTRATISTA (ÚNICO) ===
-        if (dto.getTipoContratistaId() != null) {
+        // === ACTUALIZAR TIPO DE EMPRESA (ÚNICO) ===
+        if (dto.getTipoEmpresaId() != null) {
             // Desactivar tipos existentes
             List<EmpresaTipo> tiposExistentes = empresaTipoRepository
                     .findByEmpresa_EmpresaIdAndActivoTrue(empresaId);
@@ -157,12 +157,12 @@ public class EmpresaService {
             empresaTipoRepository.saveAll(tiposExistentes);
 
             // Buscar el tipo solicitado
-            TipoContratista tipo = tipoContratistaRepository.findById(dto.getTipoContratistaId())
-                    .orElseThrow(() -> new IllegalArgumentException("Tipo de contratista no encontrado: " + dto.getTipoContratistaId()));
+            TipoEmpresa tipo = tipoEmpresaRepository.findById(dto.getTipoEmpresaId())
+                    .orElseThrow(() -> new IllegalArgumentException("Tipo de empresa no encontrado: " + dto.getTipoEmpresaId()));
 
             // Verificar si ya existe una relación inactiva y reactivarla
             EmpresaTipo empresaTipoExistente = empresaTipoRepository
-                    .findByEmpresa_EmpresaIdAndTipoContratista_TipoId(empresaId, dto.getTipoContratistaId())
+                    .findByEmpresa_EmpresaIdAndTipoEmpresa_TipoId(empresaId, dto.getTipoEmpresaId())
                     .orElse(null);
 
             if (empresaTipoExistente != null) {
@@ -171,7 +171,7 @@ public class EmpresaService {
             } else {
                 EmpresaTipo nuevoEmpresaTipo = new EmpresaTipo();
                 nuevoEmpresaTipo.setEmpresa(empresa);
-                nuevoEmpresaTipo.setTipoContratista(tipo);
+                nuevoEmpresaTipo.setTipoEmpresa(tipo);
                 nuevoEmpresaTipo.setActivo(true);
                 empresaTipoRepository.save(nuevoEmpresaTipo);
             }
@@ -210,11 +210,11 @@ public class EmpresaService {
     }
 
     @Transactional(readOnly = true)
-    public List<TipoContratistaDTO> listarTiposContratista() {
-        log.info("Listando tipos de contratista activos");
-        List<TipoContratista> tipos = tipoContratistaRepository.findByActivoTrue();
+    public List<TipoEmpresaDTO> listarTiposEmpresa() {
+        log.info("Listando tipos de empresa activos");
+        List<TipoEmpresa> tipos = tipoEmpresaRepository.findByActivoTrue();
         return tipos.stream()
-                .map(tipoContratistaMapper::toDTO)
+                .map(tipoEmpresaMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
@@ -222,37 +222,37 @@ public class EmpresaService {
     // MÉTODOS AUXILIARES
     // ============================================
 
-    private List<TipoContratistaDTO> obtenerTiposConCategorias(UUID empresaId) {
+    private List<TipoEmpresaDTO> obtenerTiposConRequisitos(UUID empresaId) {
         List<EmpresaTipo> empresaTipos = empresaTipoRepository.findByEmpresa_EmpresaIdAndActivoTrue(empresaId);
 
         return empresaTipos.stream()
                 .map(empresaTipo -> {
-                    TipoContratistaDTO tipoDTO = tipoContratistaMapper.toDTO(empresaTipo.getTipoContratista());
-                    List<CategoriaDTO> categoriasDTO = obtenerCategoriasAplicables(empresaTipo);
-                    tipoDTO.setCategoriasAplicables(categoriasDTO);
+                    TipoEmpresaDTO tipoDTO = tipoEmpresaMapper.toDTO(empresaTipo.getTipoEmpresa());
+                    List<RequisitoDTO> requisitosDTO = obtenerRequisitosAplicables(empresaTipo);
+                    tipoDTO.setRequisitosAplicables(requisitosDTO);
                     return tipoDTO;
                 })
                 .collect(Collectors.toList());
     }
 
-    private List<CategoriaDTO> obtenerCategoriasAplicables(EmpresaTipo empresaTipo) {
-        List<TipoCategoria> tipoCategorias = tipoCategoriaRepository
-                .findByTipoContratista_TipoIdAndActivoTrue(empresaTipo.getTipoContratista().getTipoId());
+    private List<RequisitoDTO> obtenerRequisitosAplicables(EmpresaTipo empresaTipo) {
+        List<TipoRequisito> tipoRequisitos = tipoRequisitoRepository
+                .findByTipoEmpresa_TipoIdAndActivoTrue(empresaTipo.getTipoEmpresa().getTipoId());
 
-        return tipoCategorias.stream()
-                .map(tipoCategoria -> {
-                    CategoriaDTO categoriaDTO = categoriaMapper.toDTO(tipoCategoria.getCategoria());
+        return tipoRequisitos.stream()
+                .map(tipoRequisito -> {
+                    RequisitoDTO requisitoDTO = requisitoMapper.toDTO(tipoRequisito.getRequisito());
 
-                    empresaTipo.getCategoriasPersonalizadas().stream()
-                            .filter(ec -> ec.getCategoria().getCategoriaId()
-                                    .equals(tipoCategoria.getCategoria().getCategoriaId()))
+                    empresaTipo.getRequisitosPersonalizados().stream()
+                            .filter(er -> er.getRequisito().getCategoriaId()
+                                    .equals(tipoRequisito.getRequisito().getCategoriaId()))
                             .findFirst()
                             .ifPresentOrElse(
-                                    ec -> categoriaDTO.setAplica(ec.getAplica()),
-                                    () -> categoriaDTO.setAplica(true)
+                                    er -> requisitoDTO.setAplica(er.getAplica()),
+                                    () -> requisitoDTO.setAplica(true)
                             );
 
-                    return categoriaDTO;
+                    return requisitoDTO;
                 })
                 .collect(Collectors.toList());
     }

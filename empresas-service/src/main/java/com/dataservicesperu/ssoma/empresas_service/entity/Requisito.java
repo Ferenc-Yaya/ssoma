@@ -9,11 +9,11 @@ import org.hibernate.annotations.GenericGenerator;
 import java.util.UUID;
 
 @Entity
-@Table(name = "cat_categorias")
+@Table(name = "cat_requisitos")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Categoria {
+public class Requisito {
 
     @Id
     @GeneratedValue(generator = "UUID")

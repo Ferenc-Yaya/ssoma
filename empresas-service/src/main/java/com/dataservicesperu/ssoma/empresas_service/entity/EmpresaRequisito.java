@@ -9,26 +9,29 @@ import org.hibernate.annotations.GenericGenerator;
 import java.util.UUID;
 
 @Entity
-@Table(name = "cat_tipo_categorias",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"tipo_id", "categoria_id"}))
+@Table(name = "tbl_empresa_requisitos",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"empresa_tipo_id", "categoria_id"}))
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class TipoCategoria {
+public class EmpresaRequisito {
 
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(name = "tipo_categoria_id")
-    private UUID tipoCategoriaId;
+    @Column(name = "empresa_requisito_id")
+    private UUID empresaRequisitoId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tipo_id", nullable = false)
-    private TipoContratista tipoContratista;
+    @JoinColumn(name = "empresa_tipo_id", nullable = false)
+    private EmpresaTipo empresaTipo;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "categoria_id", nullable = false)
-    private Categoria categoria;
+    private Requisito requisito;
+
+    @Column(name = "aplica")
+    private Boolean aplica = true;
 
     @Column(name = "activo")
     private Boolean activo = true;

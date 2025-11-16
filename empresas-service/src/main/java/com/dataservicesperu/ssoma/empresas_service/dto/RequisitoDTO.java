@@ -9,7 +9,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CategoriaDTO {
+public class RequisitoDTO {
     private UUID categoriaId;
     private String codigo;
     private String nombre;

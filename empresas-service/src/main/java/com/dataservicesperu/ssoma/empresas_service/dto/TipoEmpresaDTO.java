@@ -10,9 +10,9 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class TipoContratistaDTO {
+public class TipoEmpresaDTO {
     private UUID tipoId;
     private String codigo;
     private String nombre;
-    private List<CategoriaDTO> categoriasAplicables;
+    private List<RequisitoDTO> requisitosAplicables;
 }

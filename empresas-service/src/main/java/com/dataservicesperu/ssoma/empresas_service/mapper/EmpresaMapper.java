@@ -8,7 +8,7 @@ import org.mapstruct.*;
 import java.util.List;
 
 @Mapper(componentModel = "spring",
-        uses = {ContactoMapper.class, ServicioMapper.class, TipoContratistaMapper.class},
+        uses = {ContactoMapper.class, ServicioMapper.class, TipoEmpresaMapper.class},
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface EmpresaMapper {
 

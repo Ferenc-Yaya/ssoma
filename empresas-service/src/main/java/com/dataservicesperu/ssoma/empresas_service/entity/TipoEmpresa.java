@@ -11,11 +11,11 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "cat_tipo_contratista")
+@Table(name = "cat_tipos_empresa")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class TipoContratista {
+public class TipoEmpresa {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -32,6 +32,6 @@ public class TipoContratista {
     @Column(name = "activo")
     private Boolean activo = true;
 
-    @OneToMany(mappedBy = "tipoContratista", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<TipoCategoria> categorias = new HashSet<>();
+    @OneToMany(mappedBy = "tipoEmpresa", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<TipoRequisito> requisitos = new HashSet<>();
 }

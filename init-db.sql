@@ -36,110 +36,111 @@ CREATE TABLE IF NOT EXISTS public.tbl_usuarios (
 
 -- Tenant A: Empresas
 --/////////////////////////////////////////////////////////////
+
 -- ============================================
--- 1. TABLA PRINCIPAL: EMPRESAS
+-- 1. CATÁLOGO: TIPOS DE EMPRESA
+-- ============================================
+CREATE TABLE IF NOT EXISTS tenant_a.cat_tipos_empresa (
+tipo_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+codigo VARCHAR(50) NOT NULL UNIQUE,
+nombre VARCHAR(100) NOT NULL,
+activo BOOLEAN DEFAULT true
+);
+
+-- ============================================
+-- 2. CATÁLOGO: REQUISITOS
+-- ============================================
+CREATE TABLE IF NOT EXISTS tenant_a.cat_requisitos (
+categoria_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+codigo VARCHAR(50) NOT NULL UNIQUE,
+nombre VARCHAR(100) NOT NULL,
+activo BOOLEAN DEFAULT true
+);
+
+-- ============================================
+-- 3. CONFIGURACIÓN: TIPO - REQUISITOS
+-- ============================================
+CREATE TABLE IF NOT EXISTS tenant_a.cat_tipo_requisitos (
+tipo_categoria_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+tipo_id UUID NOT NULL REFERENCES tenant_a.cat_tipos_empresa(tipo_id) ON DELETE CASCADE,
+categoria_id UUID NOT NULL REFERENCES tenant_a.cat_requisitos(categoria_id) ON DELETE CASCADE,
+activo BOOLEAN DEFAULT true,
+UNIQUE(tipo_id, categoria_id)
+);
+
+-- ============================================
+-- 4. TABLA PRINCIPAL: EMPRESAS
 -- ============================================
 CREATE TABLE IF NOT EXISTS tenant_a.tbl_empresas (
-    empresa_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    ruc VARCHAR(20) NOT NULL UNIQUE,
-    razon_social VARCHAR(200) NOT NULL,
-    direccion VARCHAR(255),
-    sector VARCHAR(100),
-    score_seguridad INT,
-    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    activo BOOLEAN DEFAULT true
+empresa_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+ruc VARCHAR(20) NOT NULL UNIQUE,
+razon_social VARCHAR(200) NOT NULL,
+direccion VARCHAR(255),
+sector VARCHAR(100),
+score_seguridad INT,
+fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+activo BOOLEAN DEFAULT true
 );
 
 -- ============================================
--- 2. CONTACTOS DE EMPRESA
+-- 5. CONTACTOS DE EMPRESA
 -- ============================================
 CREATE TABLE IF NOT EXISTS tenant_a.tbl_empresa_contactos (
-    contacto_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    empresa_id UUID NOT NULL REFERENCES tenant_a.tbl_empresas(empresa_id) ON DELETE CASCADE,
-    nombre_contacto VARCHAR(200),
-    telefono VARCHAR(20),
-    email VARCHAR(100),
-    es_principal BOOLEAN DEFAULT false,
-    activo BOOLEAN DEFAULT true
+contacto_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+empresa_id UUID NOT NULL REFERENCES tenant_a.tbl_empresas(empresa_id) ON DELETE CASCADE,
+nombre_contacto VARCHAR(200),
+telefono VARCHAR(20),
+email VARCHAR(100),
+es_principal BOOLEAN DEFAULT false,
+activo BOOLEAN DEFAULT true
 );
 
 -- ============================================
--- 3. SERVICIOS DE EMPRESA
+-- 6. SERVICIOS DE EMPRESA
 -- ============================================
 CREATE TABLE IF NOT EXISTS tenant_a.tbl_empresa_servicios (
-    servicio_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    empresa_id UUID NOT NULL REFERENCES tenant_a.tbl_empresas(empresa_id) ON DELETE CASCADE,
-    descripcion_servicio TEXT NOT NULL,
-    nivel_riesgo VARCHAR(50), -- 'ALTO', 'MEDIO', 'BAJO', 'ALTO_ESPECIALIZADO'
-    activo BOOLEAN DEFAULT true
+servicio_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+empresa_id UUID NOT NULL REFERENCES tenant_a.tbl_empresas(empresa_id) ON DELETE CASCADE,
+descripcion_servicio TEXT NOT NULL,
+nivel_riesgo VARCHAR(50), -- 'ALTO', 'MEDIO', 'BAJO', 'ALTO_ESPECIALIZADO'
+activo BOOLEAN DEFAULT true
 );
 
 -- ============================================
--- 4. CATÁLOGO: TIPOS DE CONTRATISTA
+-- 7. RELACIÓN: EMPRESA - TIPO
 -- ============================================
-CREATE TABLE IF NOT EXISTS tenant_a.cat_tipo_contratista (
-    tipo_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    codigo VARCHAR(50) NOT NULL UNIQUE,
-    nombre VARCHAR(100) NOT NULL,
-    activo BOOLEAN DEFAULT true
+CREATE TABLE IF NOT EXISTS tenant_a.tbl_empresa_tipos (
+empresa_tipo_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+empresa_id UUID NOT NULL REFERENCES tenant_a.tbl_empresas(empresa_id) ON DELETE CASCADE,
+tipo_id UUID NOT NULL REFERENCES tenant_a.cat_tipos_empresa(tipo_id),
+activo BOOLEAN DEFAULT true,
+UNIQUE(empresa_id, tipo_id)
 );
 
 -- ============================================
--- 5. CATÁLOGO: CATEGORÍAS
+-- 8. EXCEPCIONES/REGLAS: EMPRESA - REQUISITOS
 -- ============================================
-CREATE TABLE IF NOT EXISTS tenant_a.cat_categorias (
-    categoria_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    codigo VARCHAR(50) NOT NULL UNIQUE,
-    nombre VARCHAR(100) NOT NULL,
-    activo BOOLEAN DEFAULT true
-);
-
--- ============================================
--- 6. RELACIÓN: EMPRESA - TIPO CONTRATISTA
--- ============================================
-CREATE TABLE IF NOT EXISTS tenant_a.tbl_empresa_tipo (
-    empresa_tipo_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    empresa_id UUID NOT NULL REFERENCES tenant_a.tbl_empresas(empresa_id) ON DELETE CASCADE,
-    tipo_id UUID NOT NULL REFERENCES tenant_a.cat_tipo_contratista(tipo_id),
-    activo BOOLEAN DEFAULT true,
-    UNIQUE(empresa_id, tipo_id)
-);
-
--- ============================================
--- 7. CONFIGURACIÓN: TIPO - CATEGORÍAS (Default)
--- ============================================
-CREATE TABLE IF NOT EXISTS tenant_a.cat_tipo_categorias (
-    tipo_categoria_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tipo_id UUID NOT NULL REFERENCES tenant_a.cat_tipo_contratista(tipo_id) ON DELETE CASCADE,
-    categoria_id UUID NOT NULL REFERENCES tenant_a.cat_categorias(categoria_id),
-    activo BOOLEAN DEFAULT true,
-    UNIQUE(tipo_id, categoria_id)
-);
-
--- ============================================
--- 8. EXCEPCIONES: EMPRESA - CATEGORÍAS (Opcional)
--- ============================================
-CREATE TABLE IF NOT EXISTS tenant_a.tbl_empresa_categorias (
-    empresa_categoria_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    empresa_tipo_id UUID NOT NULL REFERENCES tenant_a.tbl_empresa_tipo(empresa_tipo_id) ON DELETE CASCADE,
-    categoria_id UUID NOT NULL REFERENCES tenant_a.cat_categorias(categoria_id),
-    aplica BOOLEAN DEFAULT true,
-    activo BOOLEAN DEFAULT true,
-    UNIQUE(empresa_tipo_id, categoria_id)
+CREATE TABLE IF NOT EXISTS tenant_a.tbl_empresa_requisitos (
+empresa_requisito_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+empresa_tipo_id UUID NOT NULL REFERENCES tenant_a.tbl_empresa_tipos(empresa_tipo_id) ON DELETE CASCADE,
+categoria_id UUID NOT NULL REFERENCES tenant_a.cat_requisitos(categoria_id),
+aplica BOOLEAN DEFAULT true,
+activo BOOLEAN DEFAULT true,
+UNIQUE(empresa_tipo_id, categoria_id)
 );
 
 -- ============================================
 -- DATOS INICIALES
 -- ============================================
 
--- Tipos de contratista
-INSERT INTO tenant_a.cat_tipo_contratista (codigo, nombre) VALUES
+-- Tipos de empresa
+INSERT INTO tenant_a.cat_tipos_empresa (codigo, nombre) VALUES
 ('PERMANENTE', 'Contratistas Permanentes'),
 ('EVENTUAL', 'Contratistas Eventuales'),
 ('VISITA', 'Visitas');
 
--- Categorías
-INSERT INTO tenant_a.cat_categorias (codigo, nombre) VALUES
+-- Requisitos (antes "categorías")
+INSERT INTO tenant_a.cat_requisitos (codigo, nombre) VALUES
 ('GENERALES', 'Generales'),
 ('PERSONAL', 'Personal'),
 ('CONDUCTOR', 'Conductor'),
@@ -150,34 +151,28 @@ INSERT INTO tenant_a.cat_categorias (codigo, nombre) VALUES
 
 -- Configuración DEFAULT (según imagen 3)
 -- PERMANENTE: GENERALES, PERSONAL, CONDUCTOR, VEHICULO
-INSERT INTO tenant_a.cat_tipo_categorias (tipo_id, categoria_id)
-SELECT t.tipo_id, c.categoria_id
-FROM tenant_a.cat_tipo_contratista t
-CROSS JOIN tenant_a.cat_categorias c
+INSERT INTO tenant_a.cat_tipo_requisitos (tipo_id, categoria_id)
+SELECT t.tipo_id, r.categoria_id
+FROM tenant_a.cat_tipos_empresa t
+CROSS JOIN tenant_a.cat_requisitos r
 WHERE t.codigo = 'PERMANENTE'
-  AND c.codigo IN ('GENERALES', 'PERSONAL', 'CONDUCTOR', 'VEHICULO');
+AND r.codigo IN ('GENERALES', 'PERSONAL', 'CONDUCTOR', 'VEHICULO');
 
 -- EVENTUAL: TODAS
-INSERT INTO tenant_a.cat_tipo_categorias (tipo_id, categoria_id)
-SELECT t.tipo_id, c.categoria_id
-FROM tenant_a.cat_tipo_contratista t
-CROSS JOIN tenant_a.cat_categorias c
+INSERT INTO tenant_a.cat_tipo_requisitos (tipo_id, categoria_id)
+SELECT t.tipo_id, r.categoria_id
+FROM tenant_a.cat_tipos_empresa t
+CROSS JOIN tenant_a.cat_requisitos r
 WHERE t.codigo = 'EVENTUAL';
 
 -- VISITA: PERSONAL, CONDUCTOR, VEHICULO
-INSERT INTO tenant_a.cat_tipo_categorias (tipo_id, categoria_id)
-SELECT t.tipo_id, c.categoria_id
-FROM tenant_a.cat_tipo_contratista t
-CROSS JOIN tenant_a.cat_categorias c
+INSERT INTO tenant_a.cat_tipo_requisitos (tipo_id, categoria_id)
+SELECT t.tipo_id, r.categoria_id
+FROM tenant_a.cat_tipos_empresa t
+CROSS JOIN tenant_a.cat_requisitos r
 WHERE t.codigo = 'VISITA'
-  AND c.codigo IN ('PERSONAL', 'CONDUCTOR', 'VEHICULO');
+AND r.codigo IN ('PERSONAL', 'CONDUCTOR', 'VEHICULO');
 
--- ============================================
--- ÍNDICES BÁSICOS
--- ============================================
-CREATE INDEX idx_empresa_contactos ON tenant_a.tbl_empresa_contactos(empresa_id);
-CREATE INDEX idx_empresa_servicios ON tenant_a.tbl_empresa_servicios(empresa_id);
-CREATE INDEX idx_empresa_tipo ON tenant_a.tbl_empresa_tipo(empresa_id);
 --//////////////////////////////////////////////////////////////////////////
 
 -- Tenant B: Empresas

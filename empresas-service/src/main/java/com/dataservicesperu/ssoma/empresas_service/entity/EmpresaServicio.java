@@ -31,7 +31,7 @@ public class EmpresaServicio {
     private String descripcionServicio;
 
     @Column(name = "nivel_riesgo", length = 50)
-    private String nivelRiesgo; // ALTO, MEDIO, BAJO, ALTO_ESPECIALIZADO
+    private String nivelRiesgo;
 
     @Column(name = "activo")
     private Boolean activo = true;

@@ -12,10 +12,10 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tbl_empresa_tipo",
+@Table(name = "tbl_empresa_tipos",
         uniqueConstraints = @UniqueConstraint(columnNames = {"empresa_id", "tipo_id"}))
 @Data
-@EqualsAndHashCode(exclude = {"empresa", "tipoContratista", "categoriasPersonalizadas"})
+@EqualsAndHashCode(exclude = {"empresa", "tipoEmpresa", "requisitosPersonalizados"})
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmpresaTipo {
@@ -32,11 +32,11 @@ public class EmpresaTipo {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "tipo_id", nullable = false)
-    private TipoContratista tipoContratista;
+    private TipoEmpresa tipoEmpresa;
 
     @Column(name = "activo")
     private Boolean activo = true;
 
     @OneToMany(mappedBy = "empresaTipo", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<EmpresaCategoria> categoriasPersonalizadas = new HashSet<>();
+    private Set<EmpresaRequisito> requisitosPersonalizados = new HashSet<>();
 }

@@ -15,8 +15,8 @@ public interface EmpresaTipoRepository extends JpaRepository<EmpresaTipo, UUID> 
 
     List<EmpresaTipo> findByEmpresa_EmpresaIdAndActivoTrue(UUID empresaId);
 
-    Optional<EmpresaTipo> findByEmpresa_EmpresaIdAndTipoContratista_TipoId(UUID empresaId, UUID tipoId);
+    Optional<EmpresaTipo> findByEmpresa_EmpresaIdAndTipoEmpresa_TipoId(UUID empresaId, UUID tipoId);
 
-    @Query("SELECT et FROM EmpresaTipo et LEFT JOIN FETCH et.categoriasPersonalizadas WHERE et.empresaTipoId = :id")
-    Optional<EmpresaTipo> findByIdWithCategorias(@Param("id") UUID id);
+    @Query("SELECT et FROM EmpresaTipo et LEFT JOIN FETCH et.requisitosPersonalizados WHERE et.empresaTipoId = :id")
+    Optional<EmpresaTipo> findByIdWithRequisitos(@Param("id") UUID id);
 }

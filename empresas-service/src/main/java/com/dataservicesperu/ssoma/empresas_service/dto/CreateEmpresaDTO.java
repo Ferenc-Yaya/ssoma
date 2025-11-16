@@ -39,6 +39,6 @@ public class CreateEmpresaDTO {
     @Valid
     private List<CreateServicioDTO> servicios;
 
-    @NotNull(message = "Debe especificar el tipo de contratista")
-    private UUID tipoContratistaId;  // ✅ Cambiado de List a UUID único
+    @NotNull(message = "Debe especificar el tipo de empresa")
+    private UUID tipoEmpresaId;  // ID del tipo de empresa
 }
