@@ -1,7 +1,7 @@
-package com.ssoma.common.config;
+package com.dataservicesperu.ssoma.common.config;
 
-import com.ssoma.common.tenant.TenantAspect;
-import com.ssoma.common.tenant.TenantInterceptor;
+import com.dataservicesperu.ssoma.common.tenant.TenantAspect;
+import com.dataservicesperu.ssoma.common.tenant.TenantInterceptor;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

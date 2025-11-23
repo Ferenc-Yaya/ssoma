@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Component
 public class JwtUtil {
@@ -29,15 +30,16 @@ public class JwtUtil {
     /**
      * Genera un JWT con tenant_id como claim
      */
-    public String generateToken(String nombreUsuario, String tenantId, String role, Boolean isSuperAdmin) {
+    public String generateToken(String username, String tenantId, UUID empresaId, Boolean esHost, String codigoRol) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("tenant_id", tenantId);
-        claims.put("role", role);
-        claims.put("is_super_admin", isSuperAdmin);  // Nuevo campo
+        claims.put("empresa_id", empresaId != null ? empresaId.toString() : null);
+        claims.put("es_host", esHost);
+        claims.put("rol", codigoRol);
 
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(nombreUsuario)
+                .setSubject(username)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)

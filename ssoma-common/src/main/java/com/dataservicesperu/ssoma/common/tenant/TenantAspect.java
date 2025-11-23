@@ -1,4 +1,4 @@
-package com.ssoma.common.tenant;
+package com.dataservicesperu.ssoma.common.tenant;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;

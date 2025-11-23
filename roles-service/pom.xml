@@ -19,7 +19,7 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.ssoma</groupId>
+			<groupId>com.dataservicesperu.ssoma</groupId>
 			<artifactId>ssoma-common</artifactId>
 			<version>1.0.0</version>
 		</dependency>

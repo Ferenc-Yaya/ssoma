@@ -1,6 +1,6 @@
-package com.ssoma.common.entity;
+package com.dataservicesperu.ssoma.common.entity;
 
-import com.ssoma.common.tenant.TenantContext;
+import com.dataservicesperu.ssoma.common.tenant.TenantContext;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,7 +29,6 @@ public abstract class TenantBaseEntity {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
 
     @PrePersist
     protected void onCreate() {

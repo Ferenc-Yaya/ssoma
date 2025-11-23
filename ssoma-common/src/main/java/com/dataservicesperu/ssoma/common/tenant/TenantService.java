@@ -1,9 +1,10 @@
-package com.ssoma.common.tenant;
+package com.dataservicesperu.ssoma.common.tenant;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
 import java.util.function.Supplier;
 
 @Service
@@ -57,7 +58,19 @@ public class TenantService {
         return TenantContext.getTenantId();
     }
 
+    public UUID getCurrentEmpresa() {
+        return TenantContext.getEmpresaContratista();
+    }
+
+    public boolean isEmpresaHost() {
+        return TenantContext.isEmpresaHost();
+    }
+
     public boolean hasTenant() {
         return TenantContext.hasTenant();
+    }
+
+    public boolean hasEmpresa() {
+        return TenantContext.hasEmpresa();
     }
 }

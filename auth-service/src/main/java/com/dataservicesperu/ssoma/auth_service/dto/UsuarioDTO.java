@@ -1,17 +1,20 @@
 package com.dataservicesperu.ssoma.auth_service.dto;
 
-import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.UUID;
 
 @Getter
-@Builder
-public class LoginResponse {
-    private String token;
-    private String username;
+@Setter
+public class UsuarioDTO {
+    private UUID usuarioId;
     private String tenantId;
+    private UUID personaId;
     private UUID empresaId;
     private Boolean esHost;
+    private String username;
+    private String password;
     private String codigoRol;
+    private Boolean activo;
 }

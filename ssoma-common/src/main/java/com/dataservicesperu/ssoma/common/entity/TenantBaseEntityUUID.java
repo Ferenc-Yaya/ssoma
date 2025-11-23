@@ -1,4 +1,4 @@
-package com.ssoma.common.entity;
+package com.dataservicesperu.ssoma.common.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

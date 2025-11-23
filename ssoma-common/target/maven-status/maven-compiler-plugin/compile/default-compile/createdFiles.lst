@@ -1,8 +1,8 @@
-com\ssoma\common\entity\TenantBaseEntityUUID.class
-com\ssoma\common\tenant\TenantNotSetException.class
-com\ssoma\common\tenant\TenantContext.class
-com\ssoma\common\config\TenantAutoConfiguration.class
-com\ssoma\common\tenant\TenantAspect.class
-com\ssoma\common\tenant\TenantInterceptor.class
-com\ssoma\common\tenant\TenantService.class
-com\ssoma\common\entity\TenantBaseEntity.class
+com\dataservicesperu\ssoma\common\config\TenantAutoConfiguration.class
+com\dataservicesperu\ssoma\common\entity\TenantBaseEntity.class
+com\dataservicesperu\ssoma\common\tenant\TenantContext.class
+com\dataservicesperu\ssoma\common\tenant\TenantInterceptor.class
+com\dataservicesperu\ssoma\common\entity\TenantBaseEntityUUID.class
+com\dataservicesperu\ssoma\common\tenant\TenantNotSetException.class
+com\dataservicesperu\ssoma\common\tenant\TenantService.class
+com\dataservicesperu\ssoma\common\tenant\TenantAspect.class
