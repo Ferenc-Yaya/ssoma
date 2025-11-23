@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Operadores - Sistema SSOMA</title>
+</head>
+<body>
+<h1>Gestión de Operadores</h1>
+
+<p><a href="home.html">← Volver al Inicio</a></p>
+
+<hr>
+
+<h2>Crear/Actualizar Operador</h2>
+<form id="operadorForm">
+    <input type="hidden" id="operadorId">
+
+    <p>
+        <label>Nombre:</label><br>
+        <input type="text" id="nombre" required>
+    </p>
+
+    <p>
+        <label>Documento:</label><br>
+        <input type="text" id="documento">
+    </p>
+
+    <p>
+        <label>
+            <input type="checkbox" id="activo" checked>
+            Activo
+        </label>
+    </p>
+
+    <button type="submit">Guardar</button>
+    <button type="button" onclick="limpiarFormulario()">Limpiar</button>
+</form>
+
+<hr>
+
+<h2>Lista de Operadores</h2>
+<button onclick="cargarOperadores()">Recargar Lista</button>
+<div id="listaOperadores"></div>
+
+<script>
+    const API_URL = 'http://localhost:8080/api/activos/operadores';
+
+    window.onload = function() {
+        const token = localStorage.getItem('jwt_token');
+        if (!token) {
+            alert('Debe iniciar sesión primero');
+            window.location.href = 'login.html';
+            return;
+        }
+        cargarOperadores();
+    };
+
+    function getHeaders() {
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+        };
+    }
+
+    async function cargarOperadores() {
+        try {
+            const response = await fetch(API_URL, { headers: getHeaders() });
+            if (response.ok) {
+                const operadores = await response.json();
+                mostrarOperadores(operadores);
+            } else {
+                document.getElementById('listaOperadores').innerHTML = '<p style="color:red">Error al cargar</p>';
+            }
+        } catch (error) {
+            document.getElementById('listaOperadores').innerHTML = '<p style="color:red">Error: ' + error.message + '</p>';
+        }
+    }
+
+    function mostrarOperadores(operadores) {
+        let html = '<table border="1" cellpadding="5" cellspacing="0">';
+        html += '<tr><th>Nombre</th><th>Documento</th><th>Activo</th><th>Acciones</th></tr>';
+
+        operadores.forEach(op => {
+            html += `<tr>
+                <td>${op.nombre}</td>
+                <td>${op.documento || ''}</td>
+                <td>${op.activo ? 'Sí' : 'No'}</td>
+                <td>
+                    <button onclick='editar(${JSON.stringify(op)})'>Editar</button>
+                    <button onclick='eliminar("${op.operadorId}")'>Eliminar</button>
+                </td>
+            </tr>`;
+        });
+
+        html += '</table>';
+        document.getElementById('listaOperadores').innerHTML = html;
+    }
+
+    document.getElementById('operadorForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const operadorId = document.getElementById('operadorId').value;
+        const data = {
+            nombre: document.getElementById('nombre').value,
+            documento: document.getElementById('documento').value,
+            activo: document.getElementById('activo').checked
+        };
+
+        try {
+            const url = operadorId ? `${API_URL}/${operadorId}` : API_URL;
+            const method = operadorId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: getHeaders(),
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                alert(operadorId ? 'Operador actualizado' : 'Operador creado');
+                limpiarFormulario();
+                cargarOperadores();
+            } else {
+                alert('Error al guardar');
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    });
+
+    function editar(op) {
+        document.getElementById('operadorId').value = op.operadorId;
+        document.getElementById('nombre').value = op.nombre;
+        document.getElementById('documento').value = op.documento || '';
+        document.getElementById('activo').checked = op.activo;
+    }
+
+    async function eliminar(operadorId) {
+        if (!confirm('¿Eliminar este operador?')) return;
+
+        try {
+            const response = await fetch(`${API_URL}/${operadorId}`, {
+                method: 'DELETE',
+                headers: getHeaders()
+            });
+
+            if (response.ok) {
+                alert('Operador eliminado');
+                cargarOperadores();
+            } else {
+                alert('Error al eliminar');
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    }
+
+    function limpiarFormulario() {
+        document.getElementById('operadorForm').reset();
+        document.getElementById('operadorId').value = '';
+        document.getElementById('activo').checked = true;
+    }
+</script>
+</body>
+</html>

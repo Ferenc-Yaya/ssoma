@@ -14,6 +14,7 @@
         <option value="$PROJECT_DIR$/compliance-service/pom.xml" />
         <option value="$PROJECT_DIR$/notifications-service/pom.xml" />
         <option value="$PROJECT_DIR$/empresas-service/pom.xml" />
+        <option value="$PROJECT_DIR$/ssoma-common/pom.xml" />
       </list>
     </option>
   </component>

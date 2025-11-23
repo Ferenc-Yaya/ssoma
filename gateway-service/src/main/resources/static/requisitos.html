@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Requisitos - Sistema SSOMA</title>
+</head>
+<body>
+<h1>Gestión de Requisitos</h1>
+
+<p><a href="home.html">← Volver al Inicio</a> | <a href="categorias-activo.html">Categorías</a></p>
+
+<hr>
+
+<h2>Crear/Actualizar Requisito</h2>
+<form id="requisitoForm">
+    <input type="hidden" id="requisitoId">
+
+    <p>
+        <label>Categoría:</label><br>
+        <select id="categoriaId" required>
+            <option value="">Seleccione...</option>
+        </select>
+    </p>
+
+    <p>
+        <label>Código:</label><br>
+        <input type="text" id="codigo" required>
+    </p>
+
+    <p>
+        <label>Nombre:</label><br>
+        <input type="text" id="nombre" required>
+    </p>
+
+    <p>
+        <label>Descripción:</label><br>
+        <textarea id="descripcion" rows="3"></textarea>
+    </p>
+
+    <p>
+        <label>
+            <input type="checkbox" id="obligatorio" checked>
+            Obligatorio
+        </label>
+    </p>
+
+    <p>
+        <label>
+            <input type="checkbox" id="activo" checked>
+            Activo
+        </label>
+    </p>
+
+    <button type="submit">Guardar</button>
+    <button type="button" onclick="limpiarFormulario()">Limpiar</button>
+</form>
+
+<hr>
+
+<h2>Lista de Requisitos</h2>
+<button onclick="cargarRequisitos()">Recargar Lista</button>
+<div id="listaRequisitos"></div>
+
+<script>
+    const API_URL = 'http://localhost:8080/api/activos/requisitos';
+    const CATEGORIAS_URL = 'http://localhost:8080/api/activos/categorias-activo';
+
+    window.onload = function() {
+        const token = localStorage.getItem('jwt_token');
+        if (!token) {
+            alert('Debe iniciar sesión primero');
+            window.location.href = 'login.html';
+            return;
+        }
+        cargarCategorias();
+        cargarRequisitos();
+    };
+
+    function getHeaders() {
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+        };
+    }
+
+    async function cargarCategorias() {
+        try {
+            const response = await fetch(CATEGORIAS_URL, { headers: getHeaders() });
+            if (response.ok) {
+                const categorias = await response.json();
+                const select = document.getElementById('categoriaId');
+                categorias.forEach(cat => {
+                    if (cat.activo) {
+                        const option = document.createElement('option');
+                        option.value = cat.categoriaId;
+                        option.text = cat.nombre + ' (' + (cat.tipoNombre || '') + ')';
+                        select.appendChild(option);
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error cargando categorías:', error);
+        }
+    }
+
+    async function cargarRequisitos() {
+        try {
+            const response = await fetch(API_URL, { headers: getHeaders() });
+            if (response.ok) {
+                const requisitos = await response.json();
+                mostrarRequisitos(requisitos);
+            } else {
+                document.getElementById('listaRequisitos').innerHTML = '<p style="color:red">Error al cargar</p>';
+            }
+        } catch (error) {
+            document.getElementById('listaRequisitos').innerHTML = '<p style="color:red">Error: ' + error.message + '</p>';
+        }
+    }
+
+    function mostrarRequisitos(requisitos) {
+        let html = '<table border="1" cellpadding="5" cellspacing="0">';
+        html += '<tr><th>Código</th><th>Nombre</th><th>Descripción</th><th>Obligatorio</th><th>Activo</th><th>Acciones</th></tr>';
+
+        requisitos.forEach(req => {
+            html += `<tr>
+                <td>${req.codigo}</td>
+                <td>${req.nombre}</td>
+                <td>${req.descripcion || ''}</td>
+                <td>${req.obligatorio ? 'Sí' : 'No'}</td>
+                <td>${req.activo ? 'Sí' : 'No'}</td>
+                <td>
+                    <button onclick='editar(${JSON.stringify(req)})'>Editar</button>
+                    <button onclick='eliminar("${req.requisitoId}")'>Eliminar</button>
+                </td>
+            </tr>`;
+        });
+
+        html += '</table>';
+        document.getElementById('listaRequisitos').innerHTML = html;
+    }
+
+    document.getElementById('requisitoForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const requisitoId = document.getElementById('requisitoId').value;
+        const data = {
+            categoriaId: document.getElementById('categoriaId').value,
+            codigo: document.getElementById('codigo').value,
+            nombre: document.getElementById('nombre').value,
+            descripcion: document.getElementById('descripcion').value,
+            obligatorio: document.getElementById('obligatorio').checked,
+            activo: document.getElementById('activo').checked
+        };
+
+        try {
+            const url = requisitoId ? `${API_URL}/${requisitoId}` : API_URL;
+            const method = requisitoId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: getHeaders(),
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                alert(requisitoId ? 'Requisito actualizado' : 'Requisito creado');
+                limpiarFormulario();
+                cargarRequisitos();
+            } else {
+                alert('Error al guardar');
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    });
+
+    function editar(req) {
+        document.getElementById('requisitoId').value = req.requisitoId;
+        document.getElementById('categoriaId').value = req.categoriaId;
+        document.getElementById('codigo').value = req.codigo;
+        document.getElementById('nombre').value = req.nombre;
+        document.getElementById('descripcion').value = req.descripcion || '';
+        document.getElementById('obligatorio').checked = req.obligatorio;
+        document.getElementById('activo').checked = req.activo;
+    }
+
+    async function eliminar(requisitoId) {
+        if (!confirm('¿Eliminar este requisito?')) return;
+
+        try {
+            const response = await fetch(`${API_URL}/${requisitoId}`, {
+                method: 'DELETE',
+                headers: getHeaders()
+            });
+
+            if (response.ok) {
+                alert('Requisito eliminado');
+                cargarRequisitos();
+            } else {
+                alert('Error al eliminar');
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    }
+
+    function limpiarFormulario() {
+        document.getElementById('requisitoForm').reset();
+        document.getElementById('requisitoId').value = '';
+        document.getElementById('obligatorio').checked = true;
+        document.getElementById('activo').checked = true;
+    }
+</script>
+</body>
+</html>

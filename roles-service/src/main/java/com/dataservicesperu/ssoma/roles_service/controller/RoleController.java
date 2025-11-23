@@ -1,11 +1,9 @@
 package com.dataservicesperu.ssoma.roles_service.controller;
 
-import com.dataservicesperu.ssoma.roles_service.config.CurrentTenantHolder;
-import com.dataservicesperu.ssoma.roles_service.entity.Role;
-import com.dataservicesperu.ssoma.roles_service.repository.RoleRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import com.dataservicesperu.ssoma.roles_service.service.SuperAdminRoleService;
-import org.springframework.http.ResponseEntity;
+import com.dataservicesperu.ssoma.roles_service.dto.RoleDTO;
+import com.dataservicesperu.ssoma.roles_service.service.RoleService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,54 +11,40 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/roles")
+@RequiredArgsConstructor
 public class RoleController {
 
-    @Autowired
-    private RoleRepository roleRepository;
-
-    @Autowired
-    private SuperAdminRoleService superAdminRoleService;
+    private final RoleService roleService;
 
     @GetMapping
-    public List<Role> getAllRoles() {
-        // Si es superadmin, obtener roles de todos los schemas
-        if (CurrentTenantHolder.isSuperAdmin()) {
-            return superAdminRoleService.getAllRolesFromAllTenants();
-        }
-        // Si no, obtener solo los del tenant actual
-        return roleRepository.findAll();
+    public List<RoleDTO> getAll() {
+        return roleService.findAll();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Role> getRoleById(@PathVariable UUID id) {
-        return roleRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public RoleDTO getById(@PathVariable UUID id) {
+        return roleService.findById(id);
+    }
+
+    @GetMapping("/codigo/{codigoRol}")
+    public RoleDTO getByCodigoRol(@PathVariable String codigoRol) {
+        return roleService.findByCodigoRol(codigoRol);
     }
 
     @PostMapping
-    public Role createRole(@RequestBody Role role) {
-        return roleRepository.save(role);
+    @ResponseStatus(HttpStatus.CREATED)
+    public RoleDTO create(@RequestBody RoleDTO request) {
+        return roleService.create(request);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Role> updateRole(@PathVariable UUID id, @RequestBody Role roleDetails) {
-        return roleRepository.findById(id)
-                .map(role -> {
-                    role.setNombreRol(roleDetails.getNombreRol());
-                    role.setDescripcion(roleDetails.getDescripcion());
-                    return ResponseEntity.ok(roleRepository.save(role));
-                })
-                .orElse(ResponseEntity.notFound().build());
+    public RoleDTO update(@PathVariable UUID id, @RequestBody RoleDTO request) {
+        return roleService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRole(@PathVariable UUID id) {
-        return roleRepository.findById(id)
-                .map(role -> {
-                    roleRepository.delete(role);
-                    return ResponseEntity.ok().<Void>build();
-                })
-                .orElse(ResponseEntity.notFound().build());
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable UUID id) {
+        roleService.delete(id);
     }
 }

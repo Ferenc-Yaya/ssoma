@@ -1,4 +1,4 @@
-package com.dataservicesperu.ssoma.roles_service.config;
+package com.dataservicesperu.ssoma.activos_service.config;
 
 public class CurrentTenantHolder {
 

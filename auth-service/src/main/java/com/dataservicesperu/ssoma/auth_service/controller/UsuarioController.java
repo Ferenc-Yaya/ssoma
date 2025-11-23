@@ -19,35 +19,30 @@ public class UsuarioController {
     private final UsuarioRepository usuarioRepository;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    // CREATE - Crear usuario
     @PostMapping
     public ResponseEntity<Usuario> crear(@RequestBody Usuario usuario) {
         try {
-            // Validar que no exista el nombre de usuario
-            if (usuarioRepository.findByNombreUsuario(usuario.getNombreUsuario()).isPresent()) {  // ✅ CAMBIADO
+            if (usuarioRepository.findByNombreUsuario(usuario.getNombreUsuario()).isPresent()) {
                 return ResponseEntity.status(400).body(null);
             }
 
             usuario.setId(UUID.randomUUID());
-
-            // Hashear contraseña antes de guardar
             usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
 
             Usuario guardado = usuarioRepository.save(usuario);
             return ResponseEntity.ok(guardado);
+
         } catch (Exception e) {
             return ResponseEntity.status(500).body(null);
         }
     }
 
-    // READ - Listar todos los usuarios
     @GetMapping
     public ResponseEntity<List<Usuario>> listar() {
         List<Usuario> usuarios = usuarioRepository.findAll();
         return ResponseEntity.ok(usuarios);
     }
 
-    // READ - Obtener un usuario por ID
     @GetMapping("/{id}")
     public ResponseEntity<Usuario> obtener(@PathVariable String id) {
         try {
@@ -60,14 +55,13 @@ public class UsuarioController {
         }
     }
 
-    // UPDATE - Actualizar usuario
     @PutMapping("/{id}")
     public ResponseEntity<Usuario> actualizar(@PathVariable String id, @RequestBody Usuario usuarioActualizado) {
         try {
             UUID uuid = UUID.fromString(id);
             return usuarioRepository.findById(uuid)
                     .map(usuario -> {
-                        usuario.setNombreUsuario(usuarioActualizado.getNombreUsuario());  // ✅ CAMBIADO
+                        usuario.setNombreUsuario(usuarioActualizado.getNombreUsuario());
 
                         // Solo actualizar password si viene en el request
                         if (usuarioActualizado.getPassword() != null && !usuarioActualizado.getPassword().isEmpty()) {

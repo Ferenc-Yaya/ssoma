@@ -1,4 +1,4 @@
-package com.dataservicesperu.ssoma.roles_service.config;
+package com.dataservicesperu.ssoma.activos_service.config;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,7 +17,6 @@ public class TenantFilter implements Filter {
         String tenantId = req.getHeader("X-Tenant-ID");
         String isSuperAdmin = req.getHeader("X-Super-Admin");
 
-        // Si es super admin, establecemos el flag pero mantenemos el tenant
         if ("true".equals(isSuperAdmin)) {
             CurrentTenantHolder.setSuperAdmin(true);
             CurrentTenantHolder.setTenantId(tenantId);
@@ -27,7 +26,6 @@ public class TenantFilter implements Filter {
             CurrentTenantHolder.setTenantId(tenantId);
             System.out.println("👤 Usuario normal - Tenant: " + tenantId);
         } else {
-            // Esquema por defecto para pruebas internas
             CurrentTenantHolder.setSuperAdmin(false);
             CurrentTenantHolder.setTenantId("public");
             System.out.println("⚠️ Sin tenant especificado, usando 'public'");

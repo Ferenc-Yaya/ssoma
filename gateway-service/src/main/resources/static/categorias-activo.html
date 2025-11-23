@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Categorías de Activo - Sistema SSOMA</title>
+</head>
+<body>
+<h1>Gestión de Categorías de Activo</h1>
+
+<p><a href="home.html">← Volver al Inicio</a> | <a href="tipos-activo.html">Tipos de Activo</a></p>
+
+<hr>
+
+<h2>Crear/Actualizar Categoría</h2>
+<form id="categoriaForm">
+    <input type="hidden" id="categoriaId">
+
+    <p>
+        <label>Tipo de Activo:</label><br>
+        <select id="tipoId" required>
+            <option value="">Seleccione...</option>
+        </select>
+    </p>
+
+    <p>
+        <label>Código:</label><br>
+        <input type="text" id="codigo" required>
+    </p>
+
+    <p>
+        <label>Nombre:</label><br>
+        <input type="text" id="nombre" required>
+    </p>
+
+    <p>
+        <label>Descripción:</label><br>
+        <textarea id="descripcion" rows="3"></textarea>
+    </p>
+
+    <p>
+        <label>
+            <input type="checkbox" id="activo" checked>
+            Activo
+        </label>
+    </p>
+
+    <button type="submit">Guardar</button>
+    <button type="button" onclick="limpiarFormulario()">Limpiar</button>
+</form>
+
+<hr>
+
+<h2>Lista de Categorías</h2>
+<button onclick="cargarCategorias()">Recargar Lista</button>
+<div id="listaCategorias"></div>
+
+<script>
+    const API_URL = 'http://localhost:8080/api/activos/categorias-activo';
+    const TIPOS_URL = 'http://localhost:8080/api/activos/tipos-activo';
+
+    window.onload = function() {
+        const token = localStorage.getItem('jwt_token');
+        if (!token) {
+            alert('Debe iniciar sesión primero');
+            window.location.href = 'login.html';
+            return;
+        }
+        cargarTipos();
+        cargarCategorias();
+    };
+
+    function getHeaders() {
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+        };
+    }
+
+    async function cargarTipos() {
+        try {
+            const response = await fetch(TIPOS_URL, { headers: getHeaders() });
+            if (response.ok) {
+                const tipos = await response.json();
+                const select = document.getElementById('tipoId');
+                tipos.forEach(tipo => {
+                    if (tipo.activo) {
+                        const option = document.createElement('option');
+                        option.value = tipo.tipoId;
+                        option.text = tipo.nombre;
+                        select.appendChild(option);
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error cargando tipos:', error);
+        }
+    }
+
+    async function cargarCategorias() {
+        try {
+            const response = await fetch(API_URL, { headers: getHeaders() });
+            if (response.ok) {
+                const categorias = await response.json();
+                mostrarCategorias(categorias);
+            } else {
+                document.getElementById('listaCategorias').innerHTML = '<p style="color:red">Error al cargar</p>';
+            }
+        } catch (error) {
+            document.getElementById('listaCategorias').innerHTML = '<p style="color:red">Error: ' + error.message + '</p>';
+        }
+    }
+
+    function mostrarCategorias(categorias) {
+        let html = '<table border="1" cellpadding="5" cellspacing="0">';
+        html += '<tr><th>Código</th><th>Nombre</th><th>Tipo</th><th>Descripción</th><th>Activo</th><th>Acciones</th></tr>';
+
+        categorias.forEach(cat => {
+            html += `<tr>
+                <td>${cat.codigo}</td>
+                <td>${cat.nombre}</td>
+                <td>${cat.tipoNombre || ''}</td>
+                <td>${cat.descripcion || ''}</td>
+                <td>${cat.activo ? 'Sí' : 'No'}</td>
+                <td>
+                    <button onclick='editar(${JSON.stringify(cat)})'>Editar</button>
+                    <button onclick='eliminar("${cat.categoriaId}")'>Eliminar</button>
+                </td>
+            </tr>`;
+        });
+
+        html += '</table>';
+        document.getElementById('listaCategorias').innerHTML = html;
+    }
+
+    document.getElementById('categoriaForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const categoriaId = document.getElementById('categoriaId').value;
+        const data = {
+            tipoId: document.getElementById('tipoId').value,
+            codigo: document.getElementById('codigo').value,
+            nombre: document.getElementById('nombre').value,
+            descripcion: document.getElementById('descripcion').value,
+            activo: document.getElementById('activo').checked
+        };
+
+        try {
+            const url = categoriaId ? `${API_URL}/${categoriaId}` : API_URL;
+            const method = categoriaId ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: getHeaders(),
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                alert(categoriaId ? 'Categoría actualizada' : 'Categoría creada');
+                limpiarFormulario();
+                cargarCategorias();
+            } else {
+                alert('Error al guardar');
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    });
+
+    function editar(cat) {
+        document.getElementById('categoriaId').value = cat.categoriaId;
+        document.getElementById('tipoId').value = cat.tipoId;
+        document.getElementById('codigo').value = cat.codigo;
+        document.getElementById('nombre').value = cat.nombre;
+        document.getElementById('descripcion').value = cat.descripcion || '';
+        document.getElementById('activo').checked = cat.activo;
+    }
+
+    async function eliminar(categoriaId) {
+        if (!confirm('¿Eliminar esta categoría?')) return;
+
+        try {
+            const response = await fetch(`${API_URL}/${categoriaId}`, {
+                method: 'DELETE',
+                headers: getHeaders()
+            });
+
+            if (response.ok) {
+                alert('Categoría eliminada');
+                cargarCategorias();
+            } else {
+                alert('Error al eliminar');
+            }
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    }
+
+    function limpiarFormulario() {
+        document.getElementById('categoriaForm').reset();
+        document.getElementById('categoriaId').value = '';
+        document.getElementById('activo').checked = true;
+    }
+</script>
+</body>
+</html>
