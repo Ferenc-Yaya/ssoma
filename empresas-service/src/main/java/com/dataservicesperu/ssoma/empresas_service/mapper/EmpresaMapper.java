@@ -8,29 +8,28 @@ import org.mapstruct.*;
 import java.util.List;
 
 @Mapper(componentModel = "spring",
-        uses = {ContactoMapper.class, ServicioMapper.class, TipoEmpresaMapper.class},
+        uses = {ContactoMapper.class, TipoContratistaMapper.class},
         nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface EmpresaMapper {
 
     @Mapping(target = "contactos", source = "contactos")
-    @Mapping(target = "servicios", source = "servicios")
-    @Mapping(target = "tipos", ignore = true) // Se mapea manualmente en el service
+    @Mapping(target = "tipo", source = "tipo")
     EmpresaDTO toDTO(Empresa empresa);
 
     List<EmpresaDTO> toDTOList(List<Empresa> empresas);
 
     @Mapping(target = "empresaId", ignore = true)
-    @Mapping(target = "fechaRegistro", ignore = true)
+    @Mapping(target = "tenantId", ignore = true) // Se establece en el servicio
+    @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "activo", constant = "true")
     @Mapping(target = "contactos", ignore = true) // Se mapea manualmente
-    @Mapping(target = "servicios", ignore = true) // Se mapea manualmente
-    @Mapping(target = "tipos", ignore = true) // Se mapea manualmente
+    @Mapping(target = "tipo", ignore = true) // Se mapea manualmente
     Empresa toEntity(CreateEmpresaDTO dto);
 
     @Mapping(target = "empresaId", ignore = true)
-    @Mapping(target = "fechaRegistro", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "contactos", ignore = true)
-    @Mapping(target = "servicios", ignore = true)
-    @Mapping(target = "tipos", ignore = true)
+    @Mapping(target = "tipo", ignore = true)
     void updateEntityFromDTO(CreateEmpresaDTO dto, @MappingTarget Empresa empresa);
 }

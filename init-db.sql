@@ -69,7 +69,8 @@ CREATE TABLE IF NOT EXISTS tbl_contratos (
 
     estado VARCHAR(20) DEFAULT 'ACTIVO', -- 'ACTIVO', 'CERRADO', 'SUSPENDIDO'
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(tenant_id, numero_oc
+    UNIQUE(tenant_id, numero_oc)
+);
 
 CREATE TABLE IF NOT EXISTS tbl_personas (
     persona_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -100,14 +101,15 @@ CREATE TABLE IF NOT EXISTS tbl_roles (
 
 CREATE TABLE IF NOT EXISTS tbl_usuarios (
     usuario_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id VARCHAR(50) NOT NULL REFERENCES tbl_tenants(tenant_id),
-    persona_id UUID REFERENCES tbl_personas(persona_id),
-    username VARCHAR(100) NOT NULL,
+    tenant_id VARCHAR(50) NOT NULL,
+    persona_id UUID,
+    empresa_id UUID,
+    es_host BOOLEAN DEFAULT false,
+    username VARCHAR(100) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    rol_id UUID REFERENCES tbl_roles(rol_id),
+    rol_id UUID NOT NULL REFERENCES tbl_roles(rol_id),
     activo BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(tenant_id, username)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS tbl_activos (
@@ -225,11 +227,13 @@ INSERT INTO tbl_tenants (tenant_id, nombre_comercial, ruc)
 VALUES ('KALLPA', 'Kallpa Generación S.A.', '20512836262') ON CONFLICT DO NOTHING;
 
 INSERT INTO cat_tipos_contratista (codigo, nombre) VALUES
-('HOST', 'Propietario'), ('PERMANENTE', 'Contratista Permanente'), ('EVENTUAL', 'Contratista Eventual')
+('VISITAS', 'Visitas'), ('PERMANENTE', 'Contratista Permanente'), ('EVENTUAL', 'Contratista Eventual')
 ON CONFLICT (codigo) DO NOTHING;
 
 INSERT INTO tbl_roles (codigo_rol, nombre_mostrar) VALUES
-('ADMIN_GLOBAL', 'Super Admin'), ('REVISOR_EHS', 'Supervisor SSOMA'), ('CONTRATISTA_ADMIN', 'Admin Contratista')
+('SUPER_ADMIN', 'Super Administrador'),
+('ADMIN_HOST', 'Administrador Host'),
+('ADMIN_PROVEEDOR', 'Administrador Proveedor')
 ON CONFLICT (codigo_rol) DO NOTHING;
 
 INSERT INTO cat_documentos_requeribles (codigo_interno, nombre_mostrar, categoria_agrupacion) VALUES

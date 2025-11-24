@@ -13,17 +13,19 @@ import java.util.UUID;
 @Repository
 public interface EmpresaRepository extends JpaRepository<Empresa, UUID> {
 
-    Optional<Empresa> findByRuc(String ruc);
+    Optional<Empresa> findByTenantIdAndRuc(String tenantId, String ruc);
 
-    boolean existsByRuc(String ruc);
+    boolean existsByTenantIdAndRuc(String tenantId, String ruc);
 
-    List<Empresa> findByActivoTrue();
+    List<Empresa> findByTenantIdAndActivoTrue(String tenantId);
 
-    List<Empresa> findBySector(String sector);
+    List<Empresa> findByTenantIdAndRubroComercial(String tenantId, String rubroComercial);
 
-    @Query("SELECT e FROM Empresa e LEFT JOIN FETCH e.contactos LEFT JOIN FETCH e.servicios WHERE e.empresaId = :id")
-    Optional<Empresa> findByIdWithDetails(@Param("id") UUID id);
+    @Query("SELECT e FROM Empresa e LEFT JOIN FETCH e.contactos LEFT JOIN FETCH e.tipo " +
+           "WHERE e.empresaId = :id AND e.tenantId = :tenantId")
+    Optional<Empresa> findByIdAndTenantIdWithDetails(@Param("id") UUID id, @Param("tenantId") String tenantId);
 
-    @Query("SELECT e FROM Empresa e LEFT JOIN FETCH e.tipos WHERE e.empresaId = :id")
-    Optional<Empresa> findByIdWithTipos(@Param("id") UUID id);
+    Optional<Empresa> findByEmpresaIdAndTenantId(UUID empresaId, String tenantId);
+
+    List<Empresa> findByTenantIdAndEsHostTrue(String tenantId);
 }

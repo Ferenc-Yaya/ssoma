@@ -1,74 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Login - Sistema SSOMA</title>
+    <title>SSOMA - Login</title>
 </head>
 <body>
-<h1>Sistema SSOMA - Login</h1>
+    <h1>SSOMA - Login</h1>
+    
+    <div id="errorMessage" style="color:red;display:none;"></div>
 
-<form id="loginForm">
-    <p>
-        <label>Nombre de Usuario:</label><br>
-        <input type="text" id="nombreUsuario" required>
-    </p>
+    <form id="loginForm">
+        <p>
+            <label>Usuario:</label><br>
+            <input type="text" id="username" required>
+        </p>
+        <p>
+            <label>Contraseña:</label><br>
+            <input type="password" id="password" required>
+        </p>
+        <p>
+            <button type="submit">Ingresar</button>
+        </p>
+    </form>
 
-    <p>
-        <label>Password:</label><br>
-        <input type="password" id="password" required>
-    </p>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('errorMessage');
+            
+            errorDiv.style.display = 'none';
 
-    <button type="submit">Iniciar Sesión</button>
-</form>
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
 
-<hr>
+                if (!response.ok) {
+                    throw new Error('Credenciales incorrectas');
+                }
 
-<div id="response"></div>
-
-<script>
-    const form = document.getElementById('loginForm');
-    const responseDiv = document.getElementById('response');
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const nombreUsuario = document.getElementById('nombreUsuario').value;
-        const password = document.getElementById('password').value;
-
-        try {
-            const response = await fetch('http://localhost:8080/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ nombreUsuario, password })
-            });
-
-            if (response.ok) {
                 const data = await response.json();
+                
+                // Guardar token y datos en localStorage
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('username', data.username);
+                localStorage.setItem('tenantId', data.tenantId);
+                localStorage.setItem('codigoRol', data.codigoRol);
+                localStorage.setItem('empresaId', data.empresaId || '');
+                localStorage.setItem('esHost', data.esHost);
 
-                // Guardar token en localStorage
-                localStorage.setItem('jwt_token', data.token);
+                // Redirigir al dashboard
+                window.location.href = '/dashboard.html';
 
-                responseDiv.innerHTML = `
-                    <h3>Login Exitoso</h3>
-                    <p><strong>Usuario:</strong> ${data.nombreUsuario}</p>
-                    <p><strong>Tenant ID:</strong> ${data.tenantId}</p>
-                    <p><strong>Role:</strong> ${data.role}</p>
-                    <p>Redirigiendo al sistema...</p>
-                `;
-
-                // Redirigir automáticamente después de 1 segundo
-                setTimeout(() => {
-                    window.location.href = 'home.html';
-                }, 1000);
-            } else {
-                responseDiv.innerHTML = '<p style="color:red">Error: Usuario o contraseña incorrectos</p>';
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.style.display = 'block';
             }
-        } catch (error) {
-            responseDiv.innerHTML = '<p style="color:red">Error de conexión: ' + error.message + '</p>';
-        }
-    });
-</script>
+        });
+    </script>
 </body>
 </html>

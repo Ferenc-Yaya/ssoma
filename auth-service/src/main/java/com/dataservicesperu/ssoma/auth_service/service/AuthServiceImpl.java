@@ -14,8 +14,8 @@ import org.springframework.stereotype.Service;
 public class AuthServiceImpl implements AuthService {
 
     private final UsuarioRepository usuarioRepository;
-    private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     @Override
     public LoginResponse login(LoginRequest request) {
@@ -24,6 +24,10 @@ public class AuthServiceImpl implements AuthService {
 
         if (!passwordEncoder.matches(request.getPassword(), usuario.getPasswordHash())) {
             throw new RuntimeException("Contraseña incorrecta");
+        }
+
+        if (!Boolean.TRUE.equals(usuario.getActivo())) {
+            throw new RuntimeException("Usuario inactivo");
         }
 
         String token = jwtUtil.generateToken(

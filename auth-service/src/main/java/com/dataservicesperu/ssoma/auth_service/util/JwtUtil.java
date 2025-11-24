@@ -7,8 +7,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,13 +22,11 @@ public class JwtUtil {
     @Value("${jwt.expiration}")
     private Long expiration;
 
-    private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    private Key getSigningKey() {
+        byte[] keyBytes = secret.getBytes();
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    /**
-     * Genera un JWT con tenant_id como claim
-     */
     public String generateToken(String username, String tenantId, UUID empresaId, Boolean esHost, String codigoRol) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("tenant_id", tenantId);
@@ -46,20 +43,7 @@ public class JwtUtil {
                 .compact();
     }
 
-    // Agregar método para extraer la info de superadmin
-    public Boolean extractIsSuperAdmin(String token) {
-        Claims claims = validateToken(token);
-        return claims.get("is_super_admin", Boolean.class);
-    }
-
-    public String extractRole(String token) {
-        Claims claims = validateToken(token);
-        return claims.get("role", String.class);
-    }
-    /**
-     * Valida el token y retorna los claims
-     */
-    public Claims validateToken(String token) {
+    public Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
@@ -67,18 +51,20 @@ public class JwtUtil {
                 .getBody();
     }
 
-    /**
-     * Extrae el tenant_id del token
-     */
-    public String extractTenantId(String token) {
-        Claims claims = validateToken(token);
-        return claims.get("tenant_id", String.class);
+    public String extractUsername(String token) {
+        return extractAllClaims(token).getSubject();
     }
 
-    /**
-     * Extrae el nombre de usuario (subject) del token
-     */
-    public String extractNombreUsuario(String token) {
-        return validateToken(token).getSubject();
+    public String extractTenantId(String token) {
+        return (String) extractAllClaims(token).get("tenant_id");
+    }
+
+    public boolean isTokenValid(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            return !claims.getExpiration().before(new Date());
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

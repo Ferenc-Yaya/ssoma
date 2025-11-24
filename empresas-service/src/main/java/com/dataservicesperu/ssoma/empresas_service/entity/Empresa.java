@@ -13,9 +13,10 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tbl_empresas")
+@Table(name = "tbl_empresas", 
+    uniqueConstraints = @UniqueConstraint(columnNames = {"tenant_id", "ruc"}))
 @Data
-@EqualsAndHashCode(exclude = {"contactos", "servicios", "tipos"})
+@EqualsAndHashCode(exclude = {"contactos", "tipo"})
 @NoArgsConstructor
 @AllArgsConstructor
 public class Empresa {
@@ -26,44 +27,63 @@ public class Empresa {
     @Column(name = "empresa_id", updatable = false, nullable = false)
     private UUID empresaId;
 
-    @Column(name = "ruc", nullable = false, unique = true, length = 20)
+    @Column(name = "tenant_id", nullable = false, length = 50)
+    private String tenantId;
+
+    @Column(name = "ruc", nullable = false, length = 20)
     private String ruc;
 
     @Column(name = "razon_social", nullable = false, length = 200)
     private String razonSocial;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "tipo_id")
+    private TipoContratista tipo;
+
     @Column(name = "direccion", length = 255)
     private String direccion;
 
-    @Column(name = "sector", length = 100)
-    private String sector;
+    @Column(name = "sitio_web", length = 100)
+    private String sitioWeb;
+
+    @Column(name = "rubro_comercial", length = 100)
+    private String rubroComercial;
 
     @Column(name = "score_seguridad")
-    private Integer scoreSeguridad;
+    private Integer scoreSeguridad = 100;
 
-    @Column(name = "fecha_registro")
-    private LocalDateTime fechaRegistro = LocalDateTime.now();
+    @Column(name = "estado_habilitacion", length = 20)
+    private String estadoHabilitacion = "PENDIENTE";
 
     @Column(name = "activo")
     private Boolean activo = true;
+
+    @Column(name = "es_host")
+    private Boolean esHost = false;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     // Relaciones
     @OneToMany(mappedBy = "empresa", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<EmpresaContacto> contactos = new HashSet<>();
 
-    @OneToMany(mappedBy = "empresa", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<EmpresaServicio> servicios = new HashSet<>();
-
-    @OneToMany(mappedBy = "empresa", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<EmpresaTipo> tipos = new HashSet<>();
-
     @PrePersist
     protected void onCreate() {
-        if (fechaRegistro == null) {
-            fechaRegistro = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
         }
         if (activo == null) {
             activo = true;
+        }
+        if (scoreSeguridad == null) {
+            scoreSeguridad = 100;
+        }
+        if (estadoHabilitacion == null) {
+            estadoHabilitacion = "PENDIENTE";
+        }
+        if (esHost == null) {
+            esHost = false;
         }
     }
 }

@@ -13,16 +13,17 @@ import java.util.UUID;
 @AllArgsConstructor
 public class EmpresaDTO {
     private UUID empresaId;
+    private String tenantId;
     private String ruc;
     private String razonSocial;
+    private TipoContratistaDTO tipo;
     private String direccion;
-    private String sector;
+    private String sitioWeb;
+    private String rubroComercial;
     private Integer scoreSeguridad;
-    private LocalDateTime fechaRegistro;
+    private String estadoHabilitacion;
     private Boolean activo;
-
-    // Relaciones
+    private Boolean esHost;
+    private LocalDateTime createdAt;
     private List<ContactoDTO> contactos;
-    private List<ServicioDTO> servicios;
-    private List<TipoEmpresaDTO> tipos;
 }

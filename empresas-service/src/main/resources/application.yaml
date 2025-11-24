@@ -22,9 +22,11 @@ spring:
         jdbc:
           lob:
             non_contextual_creation: true
+        default_schema: ${POSTGRES_SCHEMA:kallpa}
 
 logging:
   level:
     root: INFO
     com.dataservicesperu.ssoma: DEBUG
     org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

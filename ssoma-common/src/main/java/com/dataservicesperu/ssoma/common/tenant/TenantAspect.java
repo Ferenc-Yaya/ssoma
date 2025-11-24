@@ -10,39 +10,44 @@ import org.springframework.stereotype.Component;
 
 @Aspect
 @Component
-@Slf4j
 @RequiredArgsConstructor
+@Slf4j
 public class TenantAspect {
 
     private final EntityManager entityManager;
 
-    public static final String TENANT_FILTER_NAME = "tenantFilter";
-    public static final String TENANT_PARAMETER = "tenantId";
+    @Before("execution(* com.dataservicesperu.ssoma..repository.*Repository.*(..))")
+    public void enableTenantFilter() {
+        // SUPER_ADMIN no tiene filtro de tenant - ve todo el sistema
+        if (TenantContext.isSuperAdmin()) {
+            log.debug("SUPER_ADMIN detected - skipping tenant filter");
+            disableTenantFilter();
+            return;
+        }
 
-    @Before("execution(* org.springframework.data.jpa.repository.JpaRepository+.*(..))")
-    public void activateTenantFilter() {
-        if (TenantContext.hasTenant()) {
+        String tenantId = TenantContext.getTenantId();
+        if (tenantId == null || tenantId.isBlank()) {
+            log.warn("No tenant ID in context - filter not applied");
+            return;
+        }
+
+        try {
             Session session = entityManager.unwrap(Session.class);
-            
-            if (session.getEnabledFilter(TENANT_FILTER_NAME) == null) {
-                session.enableFilter(TENANT_FILTER_NAME)
-                        .setParameter(TENANT_PARAMETER, TenantContext.getTenantId());
-                log.debug("Tenant filter activated for: {}", TenantContext.getTenantId());
-            }
+            org.hibernate.Filter filter = session.enableFilter("tenantFilter");
+            filter.setParameter("tenantId", tenantId);
+            log.debug("Tenant filter enabled for tenant: {}", tenantId);
+        } catch (Exception e) {
+            log.error("Error enabling tenant filter: {}", e.getMessage());
         }
     }
 
-    public void disableTenantFilter() {
-        Session session = entityManager.unwrap(Session.class);
-        session.disableFilter(TENANT_FILTER_NAME);
-        log.debug("Tenant filter disabled");
-    }
-
-    public void enableTenantFilter() {
-        if (TenantContext.hasTenant()) {
+    private void disableTenantFilter() {
+        try {
             Session session = entityManager.unwrap(Session.class);
-            session.enableFilter(TENANT_FILTER_NAME)
-                    .setParameter(TENANT_PARAMETER, TenantContext.getTenantId());
+            session.disableFilter("tenantFilter");
+            log.debug("Tenant filter disabled");
+        } catch (Exception e) {
+            log.debug("Could not disable tenant filter: {}", e.getMessage());
         }
     }
 }

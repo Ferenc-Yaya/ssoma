@@ -1,129 +1,88 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 spring:
   application:
     name: gateway-service
-
-  web:
-    resources:
-      static-locations: classpath:/static/
-
   cloud:
     gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
       routes:
+        # Auth Service - maneja auth, roles y usuarios
         - id: auth-route
-          uri: ${AUTH_SERVICE_URL}
+          uri: ${AUTH_SERVICE_URL:http://localhost:8082}
           predicates:
-            - Path=/api/auth/**
+            - Path=/api/auth/**,/api/roles/**,/api/usuarios/**
           filters:
             - StripPrefix=1
 
-        - id: usuarios-route
-          uri: ${AUTH_SERVICE_URL}
-          predicates:
-            - Path=/api/usuarios/**
-          filters:
-            - StripPrefix=1
-
-        - id: roles-route
-          uri: ${ROLES_SERVICE_URL}
-          predicates:
-            - Path=/api/roles/**
-          filters:
-            - StripPrefix=1
-
-        # Nuevas rutas para los nuevos microservicios
+        # Personas Service
         - id: personas-route
-          uri: ${PERSONAS_SERVICE_URL}
+          uri: ${PERSONAS_SERVICE_URL:http://localhost:8083}
           predicates:
             - Path=/api/personas/**
           filters:
             - StripPrefix=1
 
-        - id: salud-route
-          uri: ${PERSONAS_SERVICE_URL}
-          predicates:
-            - Path=/api/salud/**
-          filters:
-            - StripPrefix=1
-
-        - id: certificaciones-route
-          uri: ${PERSONAS_SERVICE_URL}
-          predicates:
-            - Path=/api/certificaciones/**
-          filters:
-            - StripPrefix=1
-
+        # Activos Service
         - id: activos-route
-          uri: ${ACTIVOS_SERVICE_URL}
+          uri: ${ACTIVOS_SERVICE_URL:http://localhost:8084}
           predicates:
             - Path=/api/activos/**
           filters:
             - StripPrefix=1
 
-        - id: asignaciones-route
-          uri: ${ACTIVOS_SERVICE_URL}
-          predicates:
-            - Path=/api/asignaciones/**
-          filters:
-            - StripPrefix=1
-
-        - id: documentos-route
-          uri: ${DOCUMENTAL_SERVICE_URL}
+        # Documental Service
+        - id: documental-route
+          uri: ${DOCUMENTAL_SERVICE_URL:http://localhost:8085}
           predicates:
             - Path=/api/documentos/**
           filters:
             - StripPrefix=1
 
-        - id: storage-route
-          uri: ${DOCUMENTAL_SERVICE_URL}
+        # BPM Service
+        - id: bpm-route
+          uri: ${BPM_SERVICE_URL:http://localhost:8086}
           predicates:
-            - Path=/api/storage/**
+            - Path=/api/bpm/**
           filters:
             - StripPrefix=1
 
-        - id: permisos-trabajo-route
-          uri: ${BPM_SERVICE_URL}
+        # Compliance Service
+        - id: compliance-route
+          uri: ${COMPLIANCE_SERVICE_URL:http://localhost:8087}
           predicates:
-            - Path=/api/permisos-trabajo/**
+            - Path=/api/compliance/**
           filters:
             - StripPrefix=1
 
-        - id: ats-route
-          uri: ${BPM_SERVICE_URL}
+        # Notifications Service
+        - id: notifications-route
+          uri: ${NOTIFICATIONS_SERVICE_URL:http://localhost:8088}
           predicates:
-            - Path=/api/ats/**
+            - Path=/api/notifications/**
           filters:
             - StripPrefix=1
 
-        - id: reglas-route
-          uri: ${COMPLIANCE_SERVICE_URL}
-          predicates:
-            - Path=/api/reglas/**
-          filters:
-            - StripPrefix=1
-
-        - id: validaciones-route
-          uri: ${COMPLIANCE_SERVICE_URL}
-          predicates:
-            - Path=/api/validaciones/**
-          filters:
-            - StripPrefix=1
-
-        - id: notificaciones-route
-          uri: ${NOTIFICATIONS_SERVICE_URL}
-          predicates:
-            - Path=/api/notificaciones/**
-          filters:
-            - StripPrefix=1
-
+        # Empresas Service
         - id: empresas-route
-          uri: ${EMPRESAS_SERVICE_URL}
+          uri: ${EMPRESAS_SERVICE_URL:http://localhost:8089}
           predicates:
             - Path=/api/empresas/**
           filters:
             - StripPrefix=1
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:clave_secreta_desarrollo_32_caracteres}
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    com.dataservicesperu.ssoma: DEBUG

@@ -3,50 +3,51 @@ package com.dataservicesperu.ssoma.common.tenant;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.lang.NonNull;
+import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import java.util.UUID;
-
+@Component
 @Slf4j
 public class TenantInterceptor implements HandlerInterceptor {
 
     public static final String TENANT_HEADER = "X-Tenant-ID";
     public static final String EMPRESA_HEADER = "X-Empresa-ID";
-    public static final String IS_HOST_HEADER = "X-Es-Host";
+    public static final String ES_HOST_HEADER = "X-Es-Host";
+    public static final String ROL_HEADER = "X-Rol";
 
     @Override
-    public boolean preHandle(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull Object handler) {
-
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String tenantId = request.getHeader(TENANT_HEADER);
         String empresaId = request.getHeader(EMPRESA_HEADER);
-        String isHost = request.getHeader(IS_HOST_HEADER);
+        String esHostStr = request.getHeader(ES_HOST_HEADER);
+        String codigoRol = request.getHeader(ROL_HEADER);
 
         if (tenantId != null && !tenantId.isBlank()) {
-            TenantContext.setTenantId(tenantId.toUpperCase().trim());
-        } else {
-            log.warn("No tenant header found in request: {} {}", 
-                    request.getMethod(), request.getRequestURI());
+            TenantContext.setTenantId(tenantId.trim());
+            log.debug("Tenant set from header: {}", tenantId);
         }
 
         if (empresaId != null && !empresaId.isBlank()) {
-            TenantContext.setEmpresaContratista(UUID.fromString(empresaId.trim()));
+            TenantContext.setEmpresaId(empresaId.trim());
+            log.debug("Empresa set from header: {}", empresaId);
         }
 
-        TenantContext.setEmpresaHost("true".equalsIgnoreCase(isHost));
+        if (esHostStr != null && !esHostStr.isBlank()) {
+            TenantContext.setEsHost(Boolean.parseBoolean(esHostStr.trim()));
+            log.debug("EsHost set from header: {}", esHostStr);
+        }
+
+        if (codigoRol != null && !codigoRol.isBlank()) {
+            TenantContext.setCodigoRol(codigoRol.trim());
+            log.debug("CodigoRol set from header: {}", codigoRol);
+        }
 
         return true;
     }
 
     @Override
-    public void afterCompletion(
-            @NonNull HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull Object handler,
-            Exception ex) {
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, 
+                                Object handler, Exception ex) {
         TenantContext.clear();
     }
 }

@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SSOMA - Panel Admin</title>
+</head>
+<body>
+<h1>Panel de Administración</h1>
+<p>Usuario: <span id="currentUser"></span> | Rol: <span id="currentRol"></span> | <a href="#" onclick="logout()">Cerrar Sesión</a></p>
+<hr>
+
+<h2>Navegación</h2>
+<p>
+    <a href="#" onclick="showSection('roles')">Roles</a> |
+    <a href="#" onclick="showSection('usuarios')">Usuarios</a> |
+    <a href="/dashboard.html">Volver al Dashboard</a>
+</p>
+<hr>
+
+<!-- ==================== SECCIÓN ROLES ==================== -->
+<div id="rolesSection">
+    <h2>Gestión de Roles</h2>
+
+    <!-- Formulario Crear Rol -->
+    <div id="createRolDiv">
+        <h3>Crear Nuevo Rol</h3>
+        <form id="createRolForm">
+            <p>
+                <label>Código:</label>
+                <input type="text" id="newRolCodigo" required placeholder="Ej: SUPERVISOR">
+            </p>
+            <p>
+                <label>Nombre a mostrar:</label>
+                <input type="text" id="newRolNombre" required placeholder="Ej: Supervisor de Obra">
+            </p>
+            <p>
+                <button type="submit">Crear Rol</button>
+            </p>
+        </form>
+        <div id="createRolMessage" style="color:green;"></div>
+    </div>
+
+    <!-- Formulario Editar Rol -->
+    <div id="editRolDiv" style="display:none;">
+        <h3>Editar Rol</h3>
+        <form id="editRolForm">
+            <input type="hidden" id="editRolFormId">
+            <p>
+                <label>Código:</label>
+                <input type="text" id="editRolFormCodigo" required>
+            </p>
+            <p>
+                <label>Nombre a mostrar:</label>
+                <input type="text" id="editRolFormNombre" required>
+            </p>
+            <p>
+                <button type="submit">Guardar</button>
+                <button type="button" onclick="cancelEditRol()">Cancelar</button>
+            </p>
+        </form>
+    </div>
+
+    <h3>Lista de Roles</h3>
+    <button onclick="loadRoles()">Refrescar</button>
+    <table border="1" id="rolesTable">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+    <p><em>* Los roles SUPER_ADMIN, ADMIN_HOST y ADMIN_PROVEEDOR son del sistema y no se pueden modificar ni eliminar.</em></p>
+</div>
+
+<!-- ==================== SECCIÓN USUARIOS ==================== -->
+<div id="usuariosSection" style="display:none;">
+    <h2>Gestión de Usuarios</h2>
+
+    <!-- Formulario Crear Usuario -->
+    <div id="createUserDiv">
+        <h3>Crear Usuario</h3>
+        <form id="createUserForm">
+            <p>
+                <label>Username:</label>
+                <input type="text" id="newUsername" required>
+            </p>
+            <p>
+                <label>Password:</label>
+                <input type="password" id="newPassword" required>
+            </p>
+            <p>
+                <label>Tenant ID:</label>
+                <input type="text" id="newTenantId" required placeholder="KALLPA, SYSTEM, etc">
+            </p>
+            <p>
+                <label>Rol:</label>
+                <select id="newRolId" required></select>
+            </p>
+            <p>
+                <label>Empresa ID (opcional):</label>
+                <input type="text" id="newEmpresaId" placeholder="UUID de empresa">
+            </p>
+            <p>
+                <label>Es Host:</label>
+                <input type="checkbox" id="newEsHost">
+            </p>
+            <p>
+                <button type="submit">Crear Usuario</button>
+            </p>
+        </form>
+        <div id="createUserMessage" style="color:green;"></div>
+    </div>
+
+    <!-- Formulario Editar Usuario -->
+    <div id="editUserDiv" style="display:none;">
+        <h3>Editar Usuario</h3>
+        <form id="editUserForm">
+            <input type="hidden" id="editUsuarioId">
+            <p>
+                <label>Username:</label>
+                <input type="text" id="editUsername" required>
+            </p>
+            <p>
+                <label>Nuevo Password (dejar vacío para no cambiar):</label>
+                <input type="password" id="editPassword">
+            </p>
+            <p>
+                <label>Tenant ID:</label>
+                <input type="text" id="editTenantId" required>
+            </p>
+            <p>
+                <label>Rol:</label>
+                <select id="editRolId" required></select>
+            </p>
+            <p>
+                <label>Empresa ID:</label>
+                <input type="text" id="editEmpresaId">
+            </p>
+            <p>
+                <label>Es Host:</label>
+                <input type="checkbox" id="editEsHost">
+            </p>
+            <p>
+                <label>Activo:</label>
+                <input type="checkbox" id="editActivo">
+            </p>
+            <p>
+                <button type="submit">Guardar</button>
+                <button type="button" onclick="cancelEditUser()">Cancelar</button>
+            </p>
+        </form>
+    </div>
+
+    <h3>Lista de Usuarios</h3>
+    <button onclick="loadUsuarios()">Refrescar</button>
+    <table border="1" id="usuariosTable">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Tenant</th>
+            <th>Rol</th>
+            <th>Es Host</th>
+            <th>Activo</th>
+            <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script>
+    const token = localStorage.getItem('token');
+    const codigoRol = localStorage.getItem('codigoRol');
+
+    // Verificar acceso
+    if (!token || codigoRol !== 'SUPER_ADMIN') {
+        alert('Acceso denegado. Solo SUPER_ADMIN puede acceder.');
+        window.location.href = '/login.html';
+    }
+
+    document.getElementById('currentUser').textContent = localStorage.getItem('username');
+    document.getElementById('currentRol').textContent = codigoRol;
+
+    // Roles protegidos del sistema
+    const ROLES_PROTEGIDOS = ['SUPER_ADMIN', 'ADMIN_HOST', 'ADMIN_PROVEEDOR'];
+    let rolesCache = [];
+
+    // Headers con token
+    function authHeaders() {
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        };
+    }
+
+    // Mostrar sección
+    async function showSection(section) {
+        document.getElementById('rolesSection').style.display = section === 'roles' ? 'block' : 'none';
+        document.getElementById('usuariosSection').style.display = section === 'usuarios' ? 'block' : 'none';
+
+        // Reset formularios al cambiar sección
+        cancelEditRol();
+        cancelEditUser();
+
+        if (section === 'roles') {
+            await loadRoles();
+        }
+        if (section === 'usuarios') {
+            await loadRoles();
+            await loadUsuarios();
+        }
+    }
+
+    // ==================== ROLES ====================
+
+    async function loadRoles() {
+        try {
+            const response = await fetch('/api/roles', { headers: authHeaders() });
+            const roles = await response.json();
+            rolesCache = roles;
+
+            const tbody = document.querySelector('#rolesTable tbody');
+            tbody.innerHTML = roles.map(r => {
+                const esProtegido = ROLES_PROTEGIDOS.includes(r.codigoRol);
+                const acciones = esProtegido
+                    ? '<em>(protegido)</em>'
+                    : `<button onclick="editRol('${r.rolId}')">Editar</button>
+                       <button onclick="deleteRol('${r.rolId}')">Eliminar</button>`;
+                return `
+                    <tr>
+                        <td>${r.rolId}</td>
+                        <td>${r.codigoRol}</td>
+                        <td>${r.nombreMostrar}</td>
+                        <td>${acciones}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Llenar selects de usuarios si estamos en esa sección
+            if (document.getElementById('usuariosSection').style.display !== 'none') {
+                const newRolSelect = document.getElementById('newRolId');
+                const editRolSelect = document.getElementById('editRolId');
+
+                const options = roles.map(r =>
+                    `<option value="${r.rolId}">${r.codigoRol} - ${r.nombreMostrar}</option>`
+                ).join('');
+
+                newRolSelect.innerHTML = options;
+                editRolSelect.innerHTML = options;
+            }
+
+            return roles;
+
+        } catch (error) {
+            alert('Error cargando roles: ' + error.message);
+            return [];
+        }
+    }
+
+    // Crear Rol
+    document.getElementById('createRolForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const body = {
+            codigoRol: document.getElementById('newRolCodigo').value.toUpperCase(),
+            nombreMostrar: document.getElementById('newRolNombre').value
+        };
+
+        try {
+            const response = await fetch('/api/roles', {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify(body)
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(error || 'Error creando rol');
+            }
+
+            document.getElementById('createRolMessage').textContent = 'Rol creado exitosamente';
+            document.getElementById('createRolForm').reset();
+            await loadRoles();
+
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    });
+
+    // Editar Rol - mostrar formulario
+    function editRol(id) {
+        const rol = rolesCache.find(r => r.rolId === id);
+        if (!rol) return;
+
+        document.getElementById('editRolFormId').value = rol.rolId;
+        document.getElementById('editRolFormCodigo').value = rol.codigoRol;
+        document.getElementById('editRolFormNombre').value = rol.nombreMostrar;
+
+        document.getElementById('createRolDiv').style.display = 'none';
+        document.getElementById('editRolDiv').style.display = 'block';
+    }
+
+    function cancelEditRol() {
+        document.getElementById('editRolDiv').style.display = 'none';
+        document.getElementById('createRolDiv').style.display = 'block';
+        document.getElementById('editRolForm').reset();
+    }
+
+    // Guardar edición rol
+    document.getElementById('editRolForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const id = document.getElementById('editRolFormId').value;
+        const body = {
+            codigoRol: document.getElementById('editRolFormCodigo').value.toUpperCase(),
+            nombreMostrar: document.getElementById('editRolFormNombre').value
+        };
+
+        try {
+            const response = await fetch('/api/roles/' + id, {
+                method: 'PUT',
+                headers: authHeaders(),
+                body: JSON.stringify(body)
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(error || 'Error actualizando rol');
+            }
+
+            cancelEditRol();
+            await loadRoles();
+
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    });
+
+    // Eliminar Rol
+    async function deleteRol(id) {
+        if (!confirm('¿Eliminar este rol?')) return;
+
+        try {
+            const response = await fetch('/api/roles/' + id, {
+                method: 'DELETE',
+                headers: authHeaders()
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(error || 'Error eliminando rol');
+            }
+
+            await loadRoles();
+
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    }
+
+    // ==================== USUARIOS ====================
+
+    async function loadUsuarios() {
+        try {
+            const response = await fetch('/api/usuarios', { headers: authHeaders() });
+            const usuarios = await response.json();
+
+            const tbody = document.querySelector('#usuariosTable tbody');
+            tbody.innerHTML = usuarios.map(u => `
+                <tr>
+                    <td>${u.usuarioId}</td>
+                    <td>${u.username}</td>
+                    <td>${u.tenantId}</td>
+                    <td>${u.codigoRol || u.nombreRol}</td>
+                    <td>${u.esHost ? 'Sí' : 'No'}</td>
+                    <td>${u.activo ? 'Sí' : 'No'}</td>
+                    <td>
+                        <button onclick="editUsuario('${u.usuarioId}')">Editar</button>
+                        <button onclick="deleteUsuario('${u.usuarioId}')">Eliminar</button>
+                    </td>
+                </tr>
+            `).join('');
+
+        } catch (error) {
+            alert('Error cargando usuarios: ' + error.message);
+        }
+    }
+
+    // Crear Usuario
+    document.getElementById('createUserForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const body = {
+            username: document.getElementById('newUsername').value,
+            password: document.getElementById('newPassword').value,
+            tenantId: document.getElementById('newTenantId').value,
+            rolId: document.getElementById('newRolId').value,
+            empresaId: document.getElementById('newEmpresaId').value || null,
+            esHost: document.getElementById('newEsHost').checked,
+            activo: true
+        };
+
+        try {
+            const response = await fetch('/api/usuarios', {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify(body)
+            });
+
+            if (!response.ok) throw new Error('Error creando usuario');
+
+            document.getElementById('createUserMessage').textContent = 'Usuario creado exitosamente';
+            document.getElementById('createUserForm').reset();
+            await loadUsuarios();
+
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    });
+
+    // Editar Usuario - mostrar formulario
+    async function editUsuario(id) {
+        try {
+            // Cargar roles si no están cargados
+            if (rolesCache.length === 0) {
+                await loadRoles();
+            }
+
+            // Cargar datos del usuario
+            const response = await fetch('/api/usuarios/' + id, { headers: authHeaders() });
+            const u = await response.json();
+
+            // Llenar el formulario
+            document.getElementById('editUsuarioId').value = u.usuarioId;
+            document.getElementById('editUsername').value = u.username;
+            document.getElementById('editPassword').value = '';
+            document.getElementById('editTenantId').value = u.tenantId;
+            document.getElementById('editEmpresaId').value = u.empresaId || '';
+            document.getElementById('editEsHost').checked = u.esHost;
+            document.getElementById('editActivo').checked = u.activo;
+
+            // Llenar y seleccionar rol
+            const editRolSelect = document.getElementById('editRolId');
+            editRolSelect.innerHTML = rolesCache.map(r =>
+                `<option value="${r.rolId}">${r.codigoRol} - ${r.nombreMostrar}</option>`
+            ).join('');
+            editRolSelect.value = u.rolId;
+
+            // Mostrar formulario de edición
+            document.getElementById('createUserDiv').style.display = 'none';
+            document.getElementById('editUserDiv').style.display = 'block';
+
+            // Scroll hacia arriba
+            document.getElementById('editUserDiv').scrollIntoView({ behavior: 'smooth' });
+
+        } catch (error) {
+            alert('Error cargando usuario: ' + error.message);
+        }
+    }
+
+    function cancelEditUser() {
+        document.getElementById('editUserDiv').style.display = 'none';
+        document.getElementById('createUserDiv').style.display = 'block';
+        document.getElementById('editUserForm').reset();
+    }
+
+    // Guardar edición usuario
+    document.getElementById('editUserForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const id = document.getElementById('editUsuarioId').value;
+        const body = {
+            username: document.getElementById('editUsername').value,
+            tenantId: document.getElementById('editTenantId').value,
+            rolId: document.getElementById('editRolId').value,
+            empresaId: document.getElementById('editEmpresaId').value || null,
+            esHost: document.getElementById('editEsHost').checked,
+            activo: document.getElementById('editActivo').checked
+        };
+
+        const password = document.getElementById('editPassword').value;
+        if (password) body.password = password;
+
+        try {
+            const response = await fetch('/api/usuarios/' + id, {
+                method: 'PUT',
+                headers: authHeaders(),
+                body: JSON.stringify(body)
+            });
+
+            if (!response.ok) throw new Error('Error actualizando usuario');
+
+            alert('Usuario actualizado correctamente');
+            cancelEditUser();
+            await loadUsuarios();
+
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    });
+
+    // Eliminar Usuario
+    async function deleteUsuario(id) {
+        if (!confirm('¿Eliminar este usuario?')) return;
+
+        try {
+            const response = await fetch('/api/usuarios/' + id, {
+                method: 'DELETE',
+                headers: authHeaders()
+            });
+
+            if (!response.ok) throw new Error('Error eliminando usuario');
+
+            await loadUsuarios();
+
+        } catch (error) {
+            alert('Error: ' + error.message);
+        }
+    }
+
+    // Logout
+    function logout() {
+        localStorage.clear();
+        window.location.href = '/login.html';
+    }
+
+    // Cargar inicial
+    loadRoles();
+</script>
+</body>
+</html>

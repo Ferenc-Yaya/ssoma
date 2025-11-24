@@ -1,30 +1,14 @@
-# Etapa 1: Build
 FROM maven:3.9.9-eclipse-temurin-17-alpine AS build
 WORKDIR /app
 
-# Copiar archivos de configuración de Maven
-COPY pom.xml .
-COPY .mvn .mvn
-COPY mvnw .
+COPY ssoma-common ./ssoma-common
+RUN cd ssoma-common && mvn clean install -DskipTests -q
 
-# Descargar dependencias (esto se cachea si pom.xml no cambia)
-RUN mvn dependency:go-offline -B
+COPY personas-service ./personas-service
+RUN cd personas-service && mvn clean package -DskipTests -q
 
-# Copiar código fuente
-COPY src ./src
-
-# Compilar la aplicación
-RUN mvn clean package -DskipTests
-
-# Etapa 2: Runtime
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
-
-# Copiar el JAR compilado desde la etapa de build
-COPY --from=build /app/target/*.jar app.jar
-
-# Exponer puerto
+COPY --from=build /app/personas-service/target/*.jar app.jar
 EXPOSE 8083
-
-# Comando de inicio
 ENTRYPOINT ["java", "-jar", "app.jar"]

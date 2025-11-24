@@ -2,7 +2,7 @@ package com.dataservicesperu.ssoma.empresas_service.controller;
 
 import com.dataservicesperu.ssoma.empresas_service.dto.CreateEmpresaDTO;
 import com.dataservicesperu.ssoma.empresas_service.dto.EmpresaDTO;
-import com.dataservicesperu.ssoma.empresas_service.dto.TipoEmpresaDTO;
+import com.dataservicesperu.ssoma.empresas_service.dto.TipoContratistaDTO;
 import com.dataservicesperu.ssoma.empresas_service.service.EmpresaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ public class EmpresaController {
         try {
             EmpresaDTO empresaCreada = empresaService.crearEmpresa(dto);
             return ResponseEntity.status(HttpStatus.CREATED).body(empresaCreada);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             log.error("Error al crear empresa: {}", e.getMessage());
             throw e;
         }
@@ -40,7 +40,7 @@ public class EmpresaController {
         try {
             EmpresaDTO empresa = empresaService.obtenerEmpresaPorId(empresaId);
             return ResponseEntity.ok(empresa);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             log.error("Error al obtener empresa: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         }
@@ -49,8 +49,25 @@ public class EmpresaController {
     @GetMapping
     public ResponseEntity<List<EmpresaDTO>> listarEmpresas() {
         log.info("GET /empresas - Listar todas las empresas activas");
-        List<EmpresaDTO> empresas = empresaService.listarEmpresasActivas();
-        return ResponseEntity.ok(empresas);
+        try {
+            List<EmpresaDTO> empresas = empresaService.listarEmpresasActivas();
+            return ResponseEntity.ok(empresas);
+        } catch (IllegalStateException e) {
+            log.error("Error al listar empresas: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
+    @GetMapping("/host")
+    public ResponseEntity<EmpresaDTO> obtenerEmpresaHost() {
+        log.info("GET /empresas/host - Obtener empresa host");
+        try {
+            EmpresaDTO empresa = empresaService.obtenerEmpresaHost();
+            return ResponseEntity.ok(empresa);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            log.error("Error al obtener empresa host: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PutMapping("/{empresaId}")
@@ -61,7 +78,7 @@ public class EmpresaController {
         try {
             EmpresaDTO empresaActualizada = empresaService.actualizarEmpresa(empresaId, dto);
             return ResponseEntity.ok(empresaActualizada);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             log.error("Error al actualizar empresa: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         }
@@ -73,7 +90,7 @@ public class EmpresaController {
         try {
             empresaService.eliminarEmpresa(empresaId);
             return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             log.error("Error al eliminar empresa: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         }
@@ -85,16 +102,16 @@ public class EmpresaController {
         try {
             empresaService.toggleActivo(empresaId);
             return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             log.error("Error al cambiar estado: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
 
-    @GetMapping("/tipos-empresa")
-    public ResponseEntity<List<TipoEmpresaDTO>> listarTiposEmpresa() {
-        log.info("GET /empresas/tipos-empresa - Listar tipos");
-        List<TipoEmpresaDTO> tipos = empresaService.listarTiposEmpresa();
+    @GetMapping("/tipos-contratista")
+    public ResponseEntity<List<TipoContratistaDTO>> listarTiposContratista() {
+        log.info("GET /empresas/tipos-contratista - Listar tipos");
+        List<TipoContratistaDTO> tipos = empresaService.listarTiposContratista();
         return ResponseEntity.ok(tipos);
     }
 }

@@ -1,8 +1,10 @@
 package com.dataservicesperu.ssoma.auth_service.service;
 
 import com.dataservicesperu.ssoma.auth_service.dto.UsuarioDTO;
+import com.dataservicesperu.ssoma.auth_service.entity.RolEntity;
 import com.dataservicesperu.ssoma.auth_service.entity.UsuarioEntity;
 import com.dataservicesperu.ssoma.auth_service.mapper.UsuarioMapper;
+import com.dataservicesperu.ssoma.auth_service.repository.RolRepository;
 import com.dataservicesperu.ssoma.auth_service.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,19 +13,24 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class UsuarioServiceImpl implements UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final RolRepository rolRepository;
     private final UsuarioMapper usuarioMapper;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional(readOnly = true)
     public List<UsuarioDTO> findAll() {
-        return usuarioMapper.toDtoList(usuarioRepository.findAll());
+        return usuarioRepository.findAll().stream()
+                .map(usuarioMapper::toDto)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -31,32 +38,53 @@ public class UsuarioServiceImpl implements UsuarioService {
     public UsuarioDTO findById(UUID id) {
         return usuarioRepository.findById(id)
                 .map(usuarioMapper::toDto)
-                .orElseThrow(() -> new RuntimeException("Usuario not found: " + id));
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + id));
     }
 
     @Override
-    @Transactional
     public UsuarioDTO create(UsuarioDTO dto) {
-        UsuarioEntity usuario = usuarioMapper.toEntity(dto);
-        usuario.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
-        return usuarioMapper.toDto(usuarioRepository.save(usuario));
+        RolEntity rol = rolRepository.findById(dto.getRolId())
+                .orElseThrow(() -> new RuntimeException("Rol no encontrado: " + dto.getRolId()));
+
+        UsuarioEntity entity = usuarioMapper.toEntity(dto);
+        entity.setRol(rol);
+        entity.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
+        
+        UsuarioEntity saved = usuarioRepository.save(entity);
+        return usuarioMapper.toDto(saved);
     }
 
     @Override
-    @Transactional
     public UsuarioDTO update(UUID id, UsuarioDTO dto) {
-        UsuarioEntity usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario not found: " + id));
-        usuarioMapper.updateEntity(dto, usuario);
-        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
-            usuario.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
+        UsuarioEntity existing = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + id));
+
+        if (dto.getRolId() != null && !dto.getRolId().equals(existing.getRol().getRolId())) {
+            RolEntity nuevoRol = rolRepository.findById(dto.getRolId())
+                    .orElseThrow(() -> new RuntimeException("Rol no encontrado: " + dto.getRolId()));
+            existing.setRol(nuevoRol);
         }
-        return usuarioMapper.toDto(usuarioRepository.save(usuario));
+
+        if (dto.getTenantId() != null) existing.setTenantId(dto.getTenantId());
+        if (dto.getPersonaId() != null) existing.setPersonaId(dto.getPersonaId());
+        if (dto.getEmpresaId() != null) existing.setEmpresaId(dto.getEmpresaId());
+        if (dto.getEsHost() != null) existing.setEsHost(dto.getEsHost());
+        if (dto.getUsername() != null) existing.setUsername(dto.getUsername());
+        if (dto.getActivo() != null) existing.setActivo(dto.getActivo());
+        
+        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
+            existing.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
+        }
+
+        UsuarioEntity saved = usuarioRepository.save(existing);
+        return usuarioMapper.toDto(saved);
     }
 
     @Override
-    @Transactional
     public void delete(UUID id) {
+        if (!usuarioRepository.existsById(id)) {
+            throw new RuntimeException("Usuario no encontrado: " + id);
+        }
         usuarioRepository.deleteById(id);
     }
 }

@@ -16,11 +16,14 @@ public interface ContactoMapper {
     List<ContactoDTO> toDTOList(List<EmpresaContacto> contactos);
 
     @Mapping(target = "contactoId", ignore = true)
+    @Mapping(target = "tenantId", ignore = true) // Se establece en el servicio
     @Mapping(target = "empresa", ignore = true)
-    @Mapping(target = "activo", constant = "true")
+    @Mapping(target = "createdAt", ignore = true)
     EmpresaContacto toEntity(CreateContactoDTO dto);
 
     @Mapping(target = "contactoId", ignore = true)
+    @Mapping(target = "tenantId", ignore = true)
     @Mapping(target = "empresa", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     void updateEntityFromDTO(CreateContactoDTO dto, @MappingTarget EmpresaContacto contacto);
 }

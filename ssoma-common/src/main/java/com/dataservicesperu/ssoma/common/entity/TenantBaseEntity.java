@@ -1,6 +1,5 @@
 package com.dataservicesperu.ssoma.common.entity;
 
-import com.dataservicesperu.ssoma.common.tenant.TenantContext;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,18 +12,14 @@ import java.time.LocalDateTime;
 @MappedSuperclass
 @Getter
 @Setter
-@FilterDef(
-        name = "tenantFilter",
-        parameters = @ParamDef(name = "tenantId", type = String.class),
-        defaultCondition = "tenant_id = :tenantId"
-)
-@Filter(name = "tenantFilter")
+@FilterDef(name = "tenantFilter", parameters = @ParamDef(name = "tenantId", type = String.class))
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 public abstract class TenantBaseEntity {
 
-    @Column(name = "tenant_id", nullable = false, length = 50)
+    @Column(name = "tenant_id", nullable = false)
     private String tenantId;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
@@ -34,10 +29,6 @@ public abstract class TenantBaseEntity {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
-
-        if (this.tenantId == null || this.tenantId.isBlank()) {
-            this.tenantId = TenantContext.requireTenantId();
-        }
     }
 
     @PreUpdate

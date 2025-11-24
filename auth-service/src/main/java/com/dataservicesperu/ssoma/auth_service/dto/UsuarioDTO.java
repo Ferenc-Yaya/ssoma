@@ -1,12 +1,11 @@
 package com.dataservicesperu.ssoma.auth_service.dto;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Getter
-@Setter
+@Data
 public class UsuarioDTO {
     private UUID usuarioId;
     private String tenantId;
@@ -15,6 +14,9 @@ public class UsuarioDTO {
     private Boolean esHost;
     private String username;
     private String password;
+    private UUID rolId;
     private String codigoRol;
+    private String nombreRol;
     private Boolean activo;
+    private LocalDateTime createdAt;
 }

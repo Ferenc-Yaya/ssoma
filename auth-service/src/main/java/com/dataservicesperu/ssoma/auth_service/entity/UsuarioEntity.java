@@ -32,17 +32,15 @@ public class UsuarioEntity {
     @Column(name = "es_host")
     private Boolean esHost = false;
 
-    @Column(name = "username", nullable = false)
+    @Column(name = "username", nullable = false, unique = true)
     private String username;
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @Column(name = "rol_id")
-    private UUID rolId;
-
-    @Column(name = "codigo_rol")
-    private String codigoRol;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "rol_id", nullable = false)
+    private RolEntity rol;
 
     @Column(name = "activo")
     private Boolean activo = true;
@@ -53,5 +51,9 @@ public class UsuarioEntity {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    public String getCodigoRol() {
+        return rol != null ? rol.getCodigoRol() : null;
     }
 }

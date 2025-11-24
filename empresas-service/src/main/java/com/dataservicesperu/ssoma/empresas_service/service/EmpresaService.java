@@ -1,5 +1,6 @@
 package com.dataservicesperu.ssoma.empresas_service.service;
 
+import com.dataservicesperu.ssoma.common.context.TenantContext;
 import com.dataservicesperu.ssoma.empresas_service.dto.*;
 import com.dataservicesperu.ssoma.empresas_service.entity.*;
 import com.dataservicesperu.ssoma.empresas_service.mapper.*;
@@ -20,61 +21,46 @@ public class EmpresaService {
 
     private final EmpresaRepository empresaRepository;
     private final EmpresaContactoRepository contactoRepository;
-    private final EmpresaServicioRepository servicioRepository;
-    private final TipoEmpresaRepository tipoEmpresaRepository;
-    private final EmpresaTipoRepository empresaTipoRepository;
-    private final TipoRequisitoRepository tipoRequisitoRepository;
+    private final TipoContratistaRepository tipoContratistaRepository;
 
     private final EmpresaMapper empresaMapper;
     private final ContactoMapper contactoMapper;
-    private final ServicioMapper servicioMapper;
-    private final TipoEmpresaMapper tipoEmpresaMapper;
-    private final RequisitoMapper requisitoMapper;
+    private final TipoContratistaMapper tipoContratistaMapper;
 
     @Transactional
     public EmpresaDTO crearEmpresa(CreateEmpresaDTO dto) {
-        log.info("Creando empresa con RUC: {}", dto.getRuc());
+        String tenantId = TenantContext.getTenantId();
+        if (tenantId == null || tenantId.isEmpty()) {
+            throw new IllegalStateException("TenantId no establecido");
+        }
 
-        if (empresaRepository.existsByRuc(dto.getRuc())) {
+        log.info("Creando empresa con RUC: {} para tenant: {}", dto.getRuc(), tenantId);
+
+        if (empresaRepository.existsByTenantIdAndRuc(tenantId, dto.getRuc())) {
             throw new IllegalArgumentException("Ya existe una empresa con el RUC: " + dto.getRuc());
         }
 
+        // Verificar que el tipo existe
+        TipoContratista tipo = tipoContratistaRepository.findById(dto.getTipoId())
+                .orElseThrow(() -> new IllegalArgumentException("Tipo de contratista no encontrado: " + dto.getTipoId()));
+
         // Crear la entidad empresa
         Empresa empresa = empresaMapper.toEntity(dto);
+        empresa.setTenantId(tenantId);
+        empresa.setTipo(tipo);
 
         // Agregar contactos
         if (dto.getContactos() != null && !dto.getContactos().isEmpty()) {
             for (CreateContactoDTO contactoDTO : dto.getContactos()) {
                 EmpresaContacto contacto = contactoMapper.toEntity(contactoDTO);
+                contacto.setTenantId(tenantId);
                 contacto.setEmpresa(empresa);
                 empresa.getContactos().add(contacto);
             }
         }
 
-        // Agregar servicios
-        if (dto.getServicios() != null && !dto.getServicios().isEmpty()) {
-            for (CreateServicioDTO servicioDTO : dto.getServicios()) {
-                EmpresaServicio servicio = servicioMapper.toEntity(servicioDTO);
-                servicio.setEmpresa(empresa);
-                empresa.getServicios().add(servicio);
-            }
-        }
-
         // Guardar empresa
         empresaRepository.save(empresa);
-
-        // Asignar tipo de empresa (ÚNICO)
-        if (dto.getTipoEmpresaId() != null) {
-            TipoEmpresa tipo = tipoEmpresaRepository.findById(dto.getTipoEmpresaId())
-                    .orElseThrow(() -> new IllegalArgumentException("Tipo de empresa no encontrado: " + dto.getTipoEmpresaId()));
-
-            EmpresaTipo empresaTipo = new EmpresaTipo();
-            empresaTipo.setEmpresa(empresa);
-            empresaTipo.setTipoEmpresa(tipo);
-            empresaTipo.setActivo(true);
-
-            empresaTipoRepository.save(empresaTipo);
-        }
 
         log.info("Empresa creada exitosamente con ID: {}", empresa.getEmpresaId());
         return obtenerEmpresaPorId(empresa.getEmpresaId());
@@ -82,98 +68,69 @@ public class EmpresaService {
 
     @Transactional(readOnly = true)
     public EmpresaDTO obtenerEmpresaPorId(UUID empresaId) {
-        log.info("Obteniendo empresa con ID: {}", empresaId);
+        String tenantId = TenantContext.getTenantId();
+        if (tenantId == null || tenantId.isEmpty()) {
+            throw new IllegalStateException("TenantId no establecido");
+        }
 
-        Empresa empresa = empresaRepository.findByIdWithDetails(empresaId)
+        log.info("Obteniendo empresa con ID: {} para tenant: {}", empresaId, tenantId);
+
+        Empresa empresa = empresaRepository.findByIdAndTenantIdWithDetails(empresaId, tenantId)
                 .orElseThrow(() -> new IllegalArgumentException("Empresa no encontrada: " + empresaId));
 
-        EmpresaDTO dto = empresaMapper.toDTO(empresa);
-        List<TipoEmpresaDTO> tiposDTO = obtenerTiposConRequisitos(empresaId);
-        dto.setTipos(tiposDTO);
-
-        return dto;
+        return empresaMapper.toDTO(empresa);
     }
 
     @Transactional(readOnly = true)
     public List<EmpresaDTO> listarEmpresasActivas() {
-        log.info("Listando todas las empresas activas");
+        String tenantId = TenantContext.getTenantId();
+        if (tenantId == null || tenantId.isEmpty()) {
+            throw new IllegalStateException("TenantId no establecido");
+        }
 
-        List<Empresa> empresas = empresaRepository.findByActivoTrue();
+        log.info("Listando todas las empresas activas para tenant: {}", tenantId);
+
+        List<Empresa> empresas = empresaRepository.findByTenantIdAndActivoTrue(tenantId);
         return empresas.stream()
-                .map(empresa -> {
-                    EmpresaDTO dto = empresaMapper.toDTO(empresa);
-                    dto.setTipos(obtenerTiposConRequisitos(empresa.getEmpresaId()));
-                    return dto;
-                })
+                .map(empresaMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
     @Transactional
     public EmpresaDTO actualizarEmpresa(UUID empresaId, CreateEmpresaDTO dto) {
-        log.info("Actualizando empresa con ID: {}", empresaId);
+        String tenantId = TenantContext.getTenantId();
+        if (tenantId == null || tenantId.isEmpty()) {
+            throw new IllegalStateException("TenantId no establecido");
+        }
 
-        Empresa empresa = empresaRepository.findByIdWithDetails(empresaId)
+        log.info("Actualizando empresa con ID: {} para tenant: {}", empresaId, tenantId);
+
+        Empresa empresa = empresaRepository.findByIdAndTenantIdWithDetails(empresaId, tenantId)
                 .orElseThrow(() -> new IllegalArgumentException("Empresa no encontrada: " + empresaId));
 
         // Actualizar datos básicos
         empresaMapper.updateEntityFromDTO(dto, empresa);
 
+        // Actualizar tipo si cambió
+        if (dto.getTipoId() != null && 
+            (empresa.getTipo() == null || !empresa.getTipo().getTipoId().equals(dto.getTipoId()))) {
+            TipoContratista tipo = tipoContratistaRepository.findById(dto.getTipoId())
+                    .orElseThrow(() -> new IllegalArgumentException("Tipo de contratista no encontrado: " + dto.getTipoId()));
+            empresa.setTipo(tipo);
+        }
+
         // === ACTUALIZAR CONTACTOS ===
         List<EmpresaContacto> contactosExistentes = contactoRepository
-                .findByEmpresa_EmpresaIdAndActivoTrue(empresaId);
+                .findByEmpresa_EmpresaIdAndTenantId(empresaId, tenantId);
         contactoRepository.deleteAll(contactosExistentes);
         empresa.getContactos().clear();
 
         if (dto.getContactos() != null && !dto.getContactos().isEmpty()) {
             for (CreateContactoDTO contactoDTO : dto.getContactos()) {
                 EmpresaContacto contacto = contactoMapper.toEntity(contactoDTO);
+                contacto.setTenantId(tenantId);
                 contacto.setEmpresa(empresa);
                 empresa.getContactos().add(contacto);
-            }
-        }
-
-        // === ACTUALIZAR SERVICIOS ===
-        List<EmpresaServicio> serviciosExistentes = servicioRepository
-                .findByEmpresa_EmpresaIdAndActivoTrue(empresaId);
-        servicioRepository.deleteAll(serviciosExistentes);
-        empresa.getServicios().clear();
-
-        if (dto.getServicios() != null && !dto.getServicios().isEmpty()) {
-            for (CreateServicioDTO servicioDTO : dto.getServicios()) {
-                EmpresaServicio servicio = servicioMapper.toEntity(servicioDTO);
-                servicio.setEmpresa(empresa);
-                empresa.getServicios().add(servicio);
-            }
-        }
-
-        // === ACTUALIZAR TIPO DE EMPRESA (ÚNICO) ===
-        if (dto.getTipoEmpresaId() != null) {
-            // Desactivar tipos existentes
-            List<EmpresaTipo> tiposExistentes = empresaTipoRepository
-                    .findByEmpresa_EmpresaIdAndActivoTrue(empresaId);
-            for (EmpresaTipo et : tiposExistentes) {
-                et.setActivo(false);
-            }
-            empresaTipoRepository.saveAll(tiposExistentes);
-
-            // Buscar el tipo solicitado
-            TipoEmpresa tipo = tipoEmpresaRepository.findById(dto.getTipoEmpresaId())
-                    .orElseThrow(() -> new IllegalArgumentException("Tipo de empresa no encontrado: " + dto.getTipoEmpresaId()));
-
-            // Verificar si ya existe una relación inactiva y reactivarla
-            EmpresaTipo empresaTipoExistente = empresaTipoRepository
-                    .findByEmpresa_EmpresaIdAndTipoEmpresa_TipoId(empresaId, dto.getTipoEmpresaId())
-                    .orElse(null);
-
-            if (empresaTipoExistente != null) {
-                empresaTipoExistente.setActivo(true);
-                empresaTipoRepository.save(empresaTipoExistente);
-            } else {
-                EmpresaTipo nuevoEmpresaTipo = new EmpresaTipo();
-                nuevoEmpresaTipo.setEmpresa(empresa);
-                nuevoEmpresaTipo.setTipoEmpresa(tipo);
-                nuevoEmpresaTipo.setActivo(true);
-                empresaTipoRepository.save(nuevoEmpresaTipo);
             }
         }
 
@@ -185,9 +142,14 @@ public class EmpresaService {
 
     @Transactional
     public void eliminarEmpresa(UUID empresaId) {
-        log.info("Eliminando empresa con ID: {}", empresaId);
+        String tenantId = TenantContext.getTenantId();
+        if (tenantId == null || tenantId.isEmpty()) {
+            throw new IllegalStateException("TenantId no establecido");
+        }
 
-        Empresa empresa = empresaRepository.findById(empresaId)
+        log.info("Eliminando empresa con ID: {} para tenant: {}", empresaId, tenantId);
+
+        Empresa empresa = empresaRepository.findByEmpresaIdAndTenantId(empresaId, tenantId)
                 .orElseThrow(() -> new IllegalArgumentException("Empresa no encontrada: " + empresaId));
 
         empresa.setActivo(false);
@@ -198,9 +160,14 @@ public class EmpresaService {
 
     @Transactional
     public void toggleActivo(UUID empresaId) {
-        log.info("Cambiando estado activo de empresa: {}", empresaId);
+        String tenantId = TenantContext.getTenantId();
+        if (tenantId == null || tenantId.isEmpty()) {
+            throw new IllegalStateException("TenantId no establecido");
+        }
 
-        Empresa empresa = empresaRepository.findById(empresaId)
+        log.info("Cambiando estado activo de empresa: {} para tenant: {}", empresaId, tenantId);
+
+        Empresa empresa = empresaRepository.findByEmpresaIdAndTenantId(empresaId, tenantId)
                 .orElseThrow(() -> new IllegalArgumentException("Empresa no encontrada: " + empresaId));
 
         empresa.setActivo(!empresa.getActivo());
@@ -210,50 +177,27 @@ public class EmpresaService {
     }
 
     @Transactional(readOnly = true)
-    public List<TipoEmpresaDTO> listarTiposEmpresa() {
-        log.info("Listando tipos de empresa activos");
-        List<TipoEmpresa> tipos = tipoEmpresaRepository.findByActivoTrue();
-        return tipos.stream()
-                .map(tipoEmpresaMapper::toDTO)
-                .collect(Collectors.toList());
+    public List<TipoContratistaDTO> listarTiposContratista() {
+        log.info("Listando tipos de contratista");
+        List<TipoContratista> tipos = tipoContratistaRepository.findAll();
+        return tipoContratistaMapper.toDTOList(tipos);
     }
 
-    // ============================================
-    // MÉTODOS AUXILIARES
-    // ============================================
+    @Transactional(readOnly = true)
+    public EmpresaDTO obtenerEmpresaHost() {
+        String tenantId = TenantContext.getTenantId();
+        if (tenantId == null || tenantId.isEmpty()) {
+            throw new IllegalStateException("TenantId no establecido");
+        }
 
-    private List<TipoEmpresaDTO> obtenerTiposConRequisitos(UUID empresaId) {
-        List<EmpresaTipo> empresaTipos = empresaTipoRepository.findByEmpresa_EmpresaIdAndActivoTrue(empresaId);
+        log.info("Obteniendo empresa host para tenant: {}", tenantId);
 
-        return empresaTipos.stream()
-                .map(empresaTipo -> {
-                    TipoEmpresaDTO tipoDTO = tipoEmpresaMapper.toDTO(empresaTipo.getTipoEmpresa());
-                    List<RequisitoDTO> requisitosDTO = obtenerRequisitosAplicables(empresaTipo);
-                    tipoDTO.setRequisitosAplicables(requisitosDTO);
-                    return tipoDTO;
-                })
-                .collect(Collectors.toList());
-    }
+        List<Empresa> empresasHost = empresaRepository.findByTenantIdAndEsHostTrue(tenantId);
+        
+        if (empresasHost.isEmpty()) {
+            throw new IllegalArgumentException("No se encontró empresa host para el tenant: " + tenantId);
+        }
 
-    private List<RequisitoDTO> obtenerRequisitosAplicables(EmpresaTipo empresaTipo) {
-        List<TipoRequisito> tipoRequisitos = tipoRequisitoRepository
-                .findByTipoEmpresa_TipoIdAndActivoTrue(empresaTipo.getTipoEmpresa().getTipoId());
-
-        return tipoRequisitos.stream()
-                .map(tipoRequisito -> {
-                    RequisitoDTO requisitoDTO = requisitoMapper.toDTO(tipoRequisito.getRequisito());
-
-                    empresaTipo.getRequisitosPersonalizados().stream()
-                            .filter(er -> er.getRequisito().getCategoriaId()
-                                    .equals(tipoRequisito.getRequisito().getCategoriaId()))
-                            .findFirst()
-                            .ifPresentOrElse(
-                                    er -> requisitoDTO.setAplica(er.getAplica()),
-                                    () -> requisitoDTO.setAplica(true)
-                            );
-
-                    return requisitoDTO;
-                })
-                .collect(Collectors.toList());
+        return empresaMapper.toDTO(empresasHost.get(0));
     }
 }

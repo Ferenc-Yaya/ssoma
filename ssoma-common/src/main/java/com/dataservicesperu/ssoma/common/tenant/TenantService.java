@@ -1,76 +1,42 @@
 package com.dataservicesperu.ssoma.common.tenant;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
-import java.util.function.Supplier;
 
 @Service
-@Slf4j
-@RequiredArgsConstructor
 public class TenantService {
 
-    private final TenantAspect tenantAspect;
-
-    public <T> T executeInTenant(String tenantId, Supplier<T> operation) {
-        String previousTenant = TenantContext.getTenantId();
-        try {
-            TenantContext.setTenantId(tenantId);
-            tenantAspect.enableTenantFilter();
-            return operation.get();
-        } finally {
-            if (previousTenant != null) {
-                TenantContext.setTenantId(previousTenant);
-                tenantAspect.enableTenantFilter();
-            } else {
-                TenantContext.clear();
-            }
-        }
-    }
-
-    public <T> T executeWithoutTenantFilter(Supplier<T> operation) {
-        try {
-            tenantAspect.disableTenantFilter();
-            log.warn("Executing operation WITHOUT tenant filter - admin mode");
-            return operation.get();
-        } finally {
-            tenantAspect.enableTenantFilter();
-        }
-    }
-
-    public void runInTenant(String tenantId, Runnable action) {
-        executeInTenant(tenantId, () -> {
-            action.run();
-            return null;
-        });
-    }
-
-    public void runWithoutTenantFilter(Runnable action) {
-        executeWithoutTenantFilter(() -> {
-            action.run();
-            return null;
-        });
-    }
-
-    public String getCurrentTenant() {
+    public String getTenantId() {
         return TenantContext.getTenantId();
     }
 
-    public UUID getCurrentEmpresa() {
-        return TenantContext.getEmpresaContratista();
+    public String getEmpresaId() {
+        return TenantContext.getEmpresaId();
     }
 
-    public boolean isEmpresaHost() {
-        return TenantContext.isEmpresaHost();
+    public UUID getEmpresaIdAsUUID() {
+        String empresaId = TenantContext.getEmpresaId();
+        return empresaId != null ? UUID.fromString(empresaId) : null;
     }
 
-    public boolean hasTenant() {
-        return TenantContext.hasTenant();
+    public boolean isHost() {
+        return TenantContext.isHost();
     }
 
-    public boolean hasEmpresa() {
-        return TenantContext.hasEmpresa();
+    public String getCodigoRol() {
+        return TenantContext.getCodigoRol();
+    }
+
+    public boolean isSuperAdmin() {
+        return TenantContext.isSuperAdmin();
+    }
+
+    public boolean isAdminHost() {
+        return "ADMIN_HOST".equals(TenantContext.getCodigoRol());
+    }
+
+    public boolean isAdminProveedor() {
+        return "ADMIN_PROVEEDOR".equals(TenantContext.getCodigoRol());
     }
 }

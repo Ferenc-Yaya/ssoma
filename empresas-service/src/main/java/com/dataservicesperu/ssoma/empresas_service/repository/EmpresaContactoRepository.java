@@ -11,7 +11,9 @@ import java.util.UUID;
 @Repository
 public interface EmpresaContactoRepository extends JpaRepository<EmpresaContacto, UUID> {
 
-    List<EmpresaContacto> findByEmpresa_EmpresaIdAndActivoTrue(UUID empresaId);
+    List<EmpresaContacto> findByEmpresa_EmpresaIdAndTenantId(UUID empresaId, String tenantId);
 
-    Optional<EmpresaContacto> findByEmpresa_EmpresaIdAndEsPrincipalTrue(UUID empresaId);
+    Optional<EmpresaContacto> findByEmpresa_EmpresaIdAndEsPrincipalTrueAndTenantId(UUID empresaId, String tenantId);
+
+    List<EmpresaContacto> findByEmpresa_EmpresaIdAndTipoContactoAndTenantId(UUID empresaId, String tipoContacto, String tenantId);
 }

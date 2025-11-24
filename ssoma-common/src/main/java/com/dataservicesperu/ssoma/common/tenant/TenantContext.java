@@ -1,18 +1,14 @@
 package com.dataservicesperu.ssoma.common.tenant;
 
-import lombok.extern.slf4j.Slf4j;
-
-import java.util.UUID;
-
-@Slf4j
 public class TenantContext {
 
     private static final ThreadLocal<String> CURRENT_TENANT = new ThreadLocal<>();
-    private static final ThreadLocal<UUID> EMPRESA_CONTRATISTA = new ThreadLocal<>();
-    private static final ThreadLocal<Boolean> IS_EMPRESA_HOST = new ThreadLocal<>();
+    private static final ThreadLocal<String> CURRENT_EMPRESA_ID = new ThreadLocal<>();
+    private static final ThreadLocal<Boolean> ES_HOST = new ThreadLocal<>();
+    private static final ThreadLocal<String> CODIGO_ROL = new ThreadLocal<>();
 
+    // Tenant ID
     public static void setTenantId(String tenantId) {
-        log.debug("Setting tenant to: {}", tenantId);
         CURRENT_TENANT.set(tenantId);
     }
 
@@ -20,52 +16,46 @@ public class TenantContext {
         return CURRENT_TENANT.get();
     }
 
-    public static void setEmpresaContratista(UUID empresaId) {
-        log.debug("Setting empresa contratista to: {}", empresaId);
-        EMPRESA_CONTRATISTA.set(empresaId);
+    // Empresa ID
+    public static void setEmpresaId(String empresaId) {
+        CURRENT_EMPRESA_ID.set(empresaId);
     }
 
-    public static UUID getEmpresaContratista() {
-        return EMPRESA_CONTRATISTA.get();
+    public static String getEmpresaId() {
+        return CURRENT_EMPRESA_ID.get();
     }
 
-    public static void setEmpresaHost(Boolean isHost) {
-        log.debug("Setting is empresa host to: {}", isHost);
-        IS_EMPRESA_HOST.set(isHost);
+    // Es Host
+    public static void setEsHost(Boolean esHost) {
+        ES_HOST.set(esHost);
     }
 
-    public static boolean isEmpresaHost() {
-        return Boolean.TRUE.equals(IS_EMPRESA_HOST.get());
+    public static Boolean getEsHost() {
+        return ES_HOST.get();
     }
 
-    public static boolean hasTenant() {
-        return CURRENT_TENANT.get() != null;
+    public static boolean isHost() {
+        return Boolean.TRUE.equals(ES_HOST.get());
     }
 
-    public static boolean hasEmpresa() {
-        return EMPRESA_CONTRATISTA.get() != null;
+    // Código Rol
+    public static void setCodigoRol(String rol) {
+        CODIGO_ROL.set(rol);
     }
 
+    public static String getCodigoRol() {
+        return CODIGO_ROL.get();
+    }
+
+    public static boolean isSuperAdmin() {
+        return "SUPER_ADMIN".equals(CODIGO_ROL.get());
+    }
+
+    // Clear all
     public static void clear() {
-        log.debug("Clearing tenant context");
         CURRENT_TENANT.remove();
-        EMPRESA_CONTRATISTA.remove();
-        IS_EMPRESA_HOST.remove();
-    }
-
-    public static String requireTenantId() {
-        String tenantId = CURRENT_TENANT.get();
-        if (tenantId == null || tenantId.isBlank()) {
-            throw new TenantNotSetException("No tenant set in current context");
-        }
-        return tenantId;
-    }
-
-    public static UUID requireEmpresaContratista() {
-        UUID empresaId = EMPRESA_CONTRATISTA.get();
-        if (empresaId == null) {
-            throw new TenantNotSetException("No empresa contratista set in current context");
-        }
-        return empresaId;
+        CURRENT_EMPRESA_ID.remove();
+        ES_HOST.remove();
+        CODIGO_ROL.remove();
     }
 }
