@@ -2,268 +2,209 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Gestión de Empresas - SSOMA</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .seccion { border: 1px solid #ccc; padding: 15px; margin: 10px 0; }
-        .contacto-item, .servicio-item { background: #f5f5f5; padding: 10px; margin: 5px 0; border-left: 3px solid #007bff; }
-        .btn { padding: 8px 15px; margin: 5px; cursor: pointer; border-radius: 4px; }
-        .btn-primary { background: #007bff; color: white; border: none; }
-        .btn-danger { background: #dc3545; color: white; border: none; }
-        .btn-success { background: #28a745; color: white; border: none; }
-        .btn-secondary { background: #6c757d; color: white; border: none; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background: #f2f2f2; font-weight: bold; }
-        .mensaje { padding: 10px; margin: 10px 0; border-radius: 4px; }
-        .mensaje.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .mensaje.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        input, select, textarea { padding: 5px; margin: 3px 0; width: 100%; max-width: 400px; }
-        .radio-group { display: flex; gap: 20px; margin: 10px 0; }
-        .radio-item { display: flex; align-items: center; cursor: pointer; }
-        .radio-item input[type="radio"] { width: auto; margin-right: 8px; }
-        .header-bar { background: #343a40; color: white; padding: 10px 20px; margin: -20px -20px 20px -20px; display: flex; justify-content: space-between; align-items: center; }
-        .user-info { display: flex; align-items: center; gap: 15px; }
-    </style>
+    <title>Gestión de Empresas</title>
 </head>
 <body>
+<h1>Gestión de Empresas Contratistas</h1>
 
-<!-- Barra superior con información de usuario -->
-<div class="header-bar">
-    <div>
-        <h2 style="margin: 0;">🏢 Gestión de Empresas - SSOMA</h2>
+<p>
+    Usuario: <span id="username">-</span> |
+    Tenant: <span id="tenantId">-</span> |
+    <a href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
+</p>
+
+<hr>
+
+<h2>Navegación</h2>
+<p>
+    <a href="/dashboard.html">Volver al Dashboard</a>
+</p>
+
+<hr>
+
+<!-- CREAR EMPRESA -->
+<h2 id="formTitle">Crear Nueva Empresa</h2>
+
+<form id="empresaForm" onsubmit="handleSubmit(event)">
+    <input type="hidden" id="empresaId">
+
+    <p>
+        <strong>RUC:</strong><br>
+        <input type="text" id="ruc" maxlength="11" required>
+    </p>
+
+    <p>
+        <strong>Razón Social:</strong><br>
+        <input type="text" id="razonSocial" maxlength="200" required>
+    </p>
+
+    <p>
+        <strong>Dirección:</strong><br>
+        <input type="text" id="direccion" maxlength="255">
+    </p>
+
+    <p>
+        <strong>Sitio Web:</strong><br>
+        <input type="url" id="sitioWeb" maxlength="255">
+    </p>
+
+    <p>
+        <strong>Rubro Comercial:</strong><br>
+        <select id="rubroComercial">
+            <option value="">Seleccione...</option>
+            <option value="Construcción">Construcción</option>
+            <option value="Minería">Minería</option>
+            <option value="Manufactura">Manufactura</option>
+            <option value="Servicios">Servicios</option>
+            <option value="Otros">Otros</option>
+        </select>
+    </p>
+
+    <p>
+        <strong>Score de Seguridad (0-100):</strong><br>
+        <input type="number" id="scoreSeguridad" min="0" max="100" step="0.01">
+    </p>
+
+    <p>
+        <strong>Estado de Habilitación:</strong><br>
+        <select id="estadoHabilitacion" required>
+            <option value="PENDIENTE">Pendiente</option>
+            <option value="HABILITADO">Habilitado</option>
+            <option value="SUSPENDIDO">Suspendido</option>
+            <option value="RECHAZADO">Rechazado</option>
+        </select>
+    </p>
+
+    <p>
+        <strong>Tipo de Contratista:</strong><br>
+        <select id="tipoContratista" required>
+            <option value="">Cargando tipos...</option>
+        </select>
+    </p>
+
+    <h3>Contactos</h3>
+    <div id="contactosList" style="margin-left: 20px;">
+        <p>No hay contactos agregados.</p>
     </div>
-    <div class="user-info">
-        <span id="userDisplay">Cargando...</span>
-        <button class="btn btn-danger" onclick="cerrarSesion()">Cerrar Sesión</button>
-    </div>
-</div>
+    <p>
+        <button type="button" onclick="agregarContacto()">+ Agregar Contacto</button>
+    </p>
 
-<!-- ============================================ -->
-<!-- FORMULARIO DE CREACIÓN/EDICIÓN -->
-<!-- ============================================ -->
-<div class="seccion">
-    <h2 id="formTitle">✨ Crear Nueva Empresa</h2>
-    <form id="empresaForm" onsubmit="handleSubmit(event)">
-        <input type="hidden" id="empresaId">
+    <p>
+        <button type="submit" id="submitBtn">Crear Empresa</button>
+        <button type="button" id="cancelBtn" onclick="cancelarEdicion()" style="display:none;">Cancelar</button>
+    </p>
+</form>
 
-        <!-- DATOS BÁSICOS -->
-        <h3>📋 Datos Básicos</h3>
-        <p>
-            <label><strong>RUC:</strong> (máximo 20 caracteres) *</label><br>
-            <input type="text" id="ruc" maxlength="20" required>
-        </p>
-        <p>
-            <label><strong>Razón Social:</strong> *</label><br>
-            <input type="text" id="razonSocial" maxlength="200" required>
-        </p>
-        <p>
-            <label><strong>Dirección:</strong></label><br>
-            <input type="text" id="direccion" maxlength="255">
-        </p>
-        <p>
-            <label><strong>Sector:</strong></label><br>
-            <select id="sector">
-                <option value="">Seleccione...</option>
-                <option value="Construcción">Construcción</option>
-                <option value="Minería">Minería</option>
-                <option value="Manufactura">Manufactura</option>
-                <option value="Tecnología">Tecnología</option>
-                <option value="Servicios">Servicios</option>
-                <option value="Agricultura">Agricultura</option>
-                <option value="Comercio">Comercio</option>
-                <option value="Transporte">Transporte</option>
-                <option value="Energía">Energía</option>
-                <option value="Otros">Otros</option>
-            </select>
-        </p>
-        <p>
-            <label><strong>Score de Seguridad SSOMA (0-100):</strong></label><br>
-            <input type="number" id="scoreSeguridad" min="0" max="100">
-        </p>
+<hr>
 
-        <!-- CONTACTOS -->
-        <h3>📞 Contactos</h3>
-        <div id="contactosList"></div>
-        <button type="button" class="btn btn-secondary" onclick="agregarContacto()">+ Agregar Contacto</button>
-
-        <!-- SERVICIOS -->
-        <h3>🔧 Servicios que Ofrece</h3>
-        <div id="serviciosList"></div>
-        <button type="button" class="btn btn-secondary" onclick="agregarServicio()">+ Agregar Servicio</button>
-
-        <!-- TIPOS DE EMPRESA - RADIO BUTTONS -->
-        <h3>🏭 Tipo de Empresa *</h3>
-        <div id="tiposEmpresaList" class="radio-group">
-            <p>Cargando tipos de empresa...</p>
-        </div>
-
-        <br><br>
-        <button type="submit" class="btn btn-primary" id="submitBtn">Crear Empresa</button>
-        <button type="button" class="btn btn-secondary" id="cancelBtn" onclick="cancelarEdicion()" style="display:none">Cancelar</button>
-    </form>
-</div>
-
-<!-- ============================================ -->
 <!-- LISTA DE EMPRESAS -->
-<!-- ============================================ -->
-<div class="seccion">
-    <h2>📊 Lista de Empresas</h2>
-    <button class="btn btn-primary" onclick="cargarEmpresas()">🔄 Recargar</button>
-    <button class="btn btn-success" onclick="mostrarSoloActivas()">✅ Solo Activas</button>
+<h2>Lista de Empresas</h2>
 
-    <div id="mensajeContainer"></div>
+<p>
+    <button onclick="cargarEmpresas()">Refrescar</button>
+    <button onclick="mostrarSoloActivas()">Solo Activas</button>
+</p>
 
-    <table>
-        <thead>
-        <tr>
-            <th>RUC</th>
-            <th>Razón Social</th>
-            <th>Sector</th>
-            <th>Score</th>
-            <th>Contactos</th>
-            <th>Servicios</th>
-            <th>Tipo</th>
-            <th>Activo</th>
-            <th>Acciones</th>
-        </tr>
-        </thead>
-        <tbody id="empresasTableBody">
-        <tr><td colspan="9" style="text-align:center;">Cargando empresas...</td></tr>
-        </tbody>
-    </table>
-</div>
+<div id="mensajeContainer"></div>
+
+<table border="1" cellpadding="5" cellspacing="0" style="width:100%; border-collapse: collapse;">
+    <thead>
+    <tr>
+        <th>RUC</th>
+        <th>Razón Social</th>
+        <th>Rubro</th>
+        <th>Score</th>
+        <th>Estado</th>
+        <th>Tipo</th>
+        <th>Contactos</th>
+        <th>Activo</th>
+        <th>Acciones</th>
+    </tr>
+    </thead>
+    <tbody id="empresasTableBody">
+    <tr>
+        <td colspan="9" style="text-align:center;">Cargando empresas...</td>
+    </tr>
+    </tbody>
+</table>
 
 <script>
-    // ============================================
-    // VARIABLES GLOBALES
-    // ============================================
     let contactosArray = [];
-    let serviciosArray = [];
-    let tiposEmpresaGlobal = [];
+    let tiposContratistaGlobal = [];
     let editandoEmpresaId = null;
 
-    // ============================================
-    // INICIALIZACIÓN Y VERIFICACIÓN DE SESIÓN
-    // ============================================
+    // INICIALIZACIÓN
     document.addEventListener('DOMContentLoaded', async function() {
-        // Verificar que existe un token JWT
         const token = localStorage.getItem('jwt_token');
         if (!token) {
-            alert('⚠️ Debe iniciar sesión primero');
-            window.location.href = 'login.html';
+            alert('Debe iniciar sesión primero');
+            window.location.href = '/login.html';
             return;
         }
 
-        // Mostrar información del usuario
-        mostrarInfoUsuario();
+        document.getElementById('username').textContent = localStorage.getItem('username') || '-';
+        document.getElementById('tenantId').textContent = localStorage.getItem('tenant_id') || '-';
 
-        // Cargar datos
-        await cargarTiposEmpresa();
+        await cargarTiposContratista();
         await cargarEmpresas();
     });
 
-    function mostrarInfoUsuario() {
-        const username = localStorage.getItem('username') || 'Usuario';
-        const tenantId = localStorage.getItem('tenant_id') || 'tenant_a';
-        document.getElementById('userDisplay').textContent = `👤 ${username} | 🏢 ${tenantId}`;
-    }
-
     function cerrarSesion() {
-        if (confirm('¿Está seguro que desea cerrar sesión?')) {
-            localStorage.removeItem('jwt_token');
-            localStorage.removeItem('username');
-            localStorage.removeItem('tenant_id');
-            window.location.href = 'login.html';
+        if (confirm('¿Cerrar sesión?')) {
+            localStorage.clear();
+            window.location.href = '/login.html';
         }
     }
 
-    // ============================================
-    // FUNCIONES DE CARGA DE DATOS
-    // ============================================
-    async function cargarTiposEmpresa() {
+    // CARGAR TIPOS DE CONTRATISTA
+    async function cargarTiposContratista() {
         try {
-            const response = await fetch('http://localhost:8080/api/empresas/tipos-empresa', {
+            const response = await fetch('http://localhost:8080/api/empresas/tipos-contratista', {
                 headers: getAuthHeaders()
             });
 
-            if (response.status === 401 || response.status === 403) {
-                alert('⚠️ Su sesión ha expirado. Por favor, inicie sesión nuevamente.');
-                cerrarSesion();
-                return;
-            }
-
             if (response.ok) {
-                tiposEmpresaGlobal = await response.json();
-                mostrarTiposEmpresa();
+                tiposContratistaGlobal = await response.json();
+                const select = document.getElementById('tipoContratista');
+                select.innerHTML = '<option value="">Seleccione un tipo...</option>';
+
+                tiposContratistaGlobal.forEach(tipo => {
+                    const option = document.createElement('option');
+                    option.value = tipo.tipoId;
+                    option.textContent = tipo.nombre;
+                    select.appendChild(option);
+                });
             } else {
-                throw new Error('No se pudieron cargar tipos');
+                throw new Error('Error al cargar tipos');
             }
         } catch (error) {
-            console.error('Error al cargar tipos:', error);
-            mostrarMensaje('Error al cargar tipos de empresa', 'error');
+            console.error('Error:', error);
+            const select = document.getElementById('tipoContratista');
+            select.innerHTML = '<option value="">Error al cargar tipos</option>';
         }
     }
 
-    function mostrarTiposEmpresa() {
-        const container = document.getElementById('tiposEmpresaList');
-
-        if (!tiposEmpresaGlobal || tiposEmpresaGlobal.length === 0) {
-            container.innerHTML = '<p style="color: red;">No se pudieron cargar los tipos de empresa</p>';
-            return;
-        }
-
-        // Crear radio buttons (solo UNO puede ser seleccionado)
-        container.innerHTML = tiposEmpresaGlobal.map(tipo => `
-            <label class="radio-item">
-                <input type="radio" name="tipoEmpresa" value="${tipo.tipoId}" required>
-                <span>${tipo.nombre}</span>
-            </label>
-        `).join('');
-    }
-
+    // CARGAR EMPRESAS
     async function cargarEmpresas() {
         try {
             const response = await fetch('http://localhost:8080/api/empresas', {
                 headers: getAuthHeaders()
             });
 
-            if (response.status === 401 || response.status === 403) {
-                alert('⚠️ Su sesión ha expirado. Por favor, inicie sesión nuevamente.');
-                cerrarSesion();
-                return;
-            }
-
             if (response.ok) {
                 const empresas = await response.json();
-                renderizarTabla(empresas);
+                mostrarEmpresas(empresas);
             } else {
                 throw new Error('Error al cargar empresas');
             }
         } catch (error) {
             console.error('Error:', error);
-            mostrarMensaje('Error al cargar las empresas', 'error');
+            mostrarMensaje('Error al cargar empresas', 'error');
         }
     }
 
-    async function mostrarSoloActivas() {
-        try {
-            const response = await fetch('http://localhost:8080/api/empresas', {
-                headers: getAuthHeaders()
-            });
-
-            if (response.ok) {
-                const empresas = await response.json();
-                const activas = empresas.filter(e => e.activo);
-                renderizarTabla(activas);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    }
-
-    function renderizarTabla(empresas) {
+    function mostrarEmpresas(empresas) {
         const tbody = document.getElementById('empresasTableBody');
 
         if (!empresas || empresas.length === 0) {
@@ -271,56 +212,47 @@
             return;
         }
 
-        tbody.innerHTML = empresas.map(empresa => {
-            const contactosTexto = empresa.contactos && empresa.contactos.length > 0
-                ? empresa.contactos.map(c => {
-                    const principal = c.esPrincipal ? '⭐ ' : '';
-                    return `${principal}${c.nombreContacto || 'Sin nombre'} - ${c.telefono || ''} - ${c.email || ''}`;
-                }).join('<br>')
+        tbody.innerHTML = empresas.map(e => {
+            const contactos = e.contactos && e.contactos.length > 0
+                ? e.contactos.map(c => c.nombreCompleto).join(', ')
                 : 'Sin contactos';
-
-            const serviciosTexto = empresa.servicios && empresa.servicios.length > 0
-                ? empresa.servicios.map(s => {
-                    const riesgo = s.nivelRiesgo ? ` [${s.nivelRiesgo}]` : '';
-                    return `${s.descripcionServicio}${riesgo}`;
-                }).join('<br>')
-                : 'Sin servicios';
-
-            const tipoTexto = empresa.tipos && empresa.tipos.length > 0
-                ? empresa.tipos[0].nombre
-                : 'Sin tipo';
 
             return `
                 <tr>
-                    <td>${empresa.ruc}</td>
-                    <td><strong>${empresa.razonSocial}</strong></td>
-                    <td>${empresa.sector || '-'}</td>
-                    <td>${empresa.scoreSeguridad !== null ? empresa.scoreSeguridad : '-'}</td>
-                    <td style="font-size: 0.9em;">${contactosTexto}</td>
-                    <td style="font-size: 0.9em;">${serviciosTexto}</td>
-                    <td><span style="background: #007bff; color: white; padding: 3px 8px; border-radius: 3px;">${tipoTexto}</span></td>
-                    <td style="text-align: center;">${empresa.activo ? '✅' : '❌'}</td>
+                    <td>${e.ruc}</td>
+                    <td>${e.razonSocial}</td>
+                    <td>${e.rubroComercial || '-'}</td>
+                    <td>${e.scoreSeguridad || '-'}</td>
+                    <td>${e.estadoHabilitacion || '-'}</td>
+                    <td>${e.tipo ? e.tipo.nombre : '-'}</td>
+                    <td>${contactos}</td>
+                    <td>${e.activo ? 'Sí' : 'No'}</td>
                     <td>
-                        <button class="btn btn-primary" onclick="editarEmpresa(${empresa.empresaId})">✏️ Editar</button>
-                        <button class="btn ${empresa.activo ? 'btn-secondary' : 'btn-success'}"
-                                onclick="toggleActivoEmpresa(${empresa.empresaId}, ${empresa.activo})">
-                            ${empresa.activo ? '🔒 Inactivar' : '✅ Activar'}
-                        </button>
-                        <button class="btn btn-danger" onclick="eliminarEmpresa(${empresa.empresaId})">🗑️ Eliminar</button>
+                        <button onclick="editarEmpresa('${e.empresaId}')">Editar</button>
+                        <button onclick="toggleActivoEmpresa('${e.empresaId}', ${e.activo})">${e.activo ? 'Inactivar' : 'Activar'}</button>
+                        <button onclick="eliminarEmpresa('${e.empresaId}')">Eliminar</button>
                     </td>
                 </tr>
             `;
         }).join('');
     }
 
-    // ============================================
-    // FUNCIONES PARA CONTACTOS
-    // ============================================
+    async function mostrarSoloActivas() {
+        const response = await fetch('http://localhost:8080/api/empresas', { headers: getAuthHeaders() });
+        if (response.ok) {
+            const todas = await response.json();
+            mostrarEmpresas(todas.filter(e => e.activo === true));
+        }
+    }
+
+    // CONTACTOS
     function agregarContacto() {
         contactosArray.push({
-            nombreContacto: '',
-            telefono: '',
+            nombreCompleto: '',
+            cargo: '',
+            tipoContacto: 'RESPONSABLE_EHS',
             email: '',
+            telefono: '',
             esPrincipal: false
         });
         renderContactos();
@@ -331,114 +263,71 @@
         renderContactos();
     }
 
-    function marcarContactoPrincipal(index, checked) {
-        // Si se marca como principal, desmarcar todos los demás
-        if (checked) {
-            contactosArray.forEach((c, i) => {
-                c.esPrincipal = (i === index);
-            });
-        } else {
-            // Si se desmarca, simplemente desmarcar este
-            contactosArray[index].esPrincipal = false;
-        }
-        renderContactos();
-    }
-
     function renderContactos() {
         const container = document.getElementById('contactosList');
 
         if (contactosArray.length === 0) {
-            container.innerHTML = '<p style="color: #666;">No hay contactos agregados. Haga clic en "+ Agregar Contacto".</p>';
+            container.innerHTML = '<p>No hay contactos agregados.</p>';
             return;
         }
 
-        container.innerHTML = contactosArray.map((contacto, index) => `
-            <div class="contacto-item">
-                <strong>Contacto ${index + 1}</strong>
-                <button type="button" class="btn btn-danger" style="float: right;" onclick="eliminarContacto(${index})">🗑️ Eliminar</button>
-
-                <div style="margin-top: 10px;">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="checkbox" ${contacto.esPrincipal ? 'checked' : ''}
-                               onchange="marcarContactoPrincipal(${index}, this.checked)"
-                               style="width: auto; margin: 0;">
-                        <strong style="color: #007bff;">⭐ Contacto Principal</strong>
-                    </label>
-                </div>
-                <br>
-
-                <label>Nombre:</label>
-                <input type="text" value="${contacto.nombreContacto || ''}"
-                       onchange="contactosArray[${index}].nombreContacto = this.value"
-                       placeholder="Nombre completo">
-                <br>
-                <label>Teléfono:</label>
-                <input type="text" value="${contacto.telefono || ''}"
-                       onchange="contactosArray[${index}].telefono = this.value"
-                       placeholder="+51 999 999 999">
-                <br>
-                <label>Email:</label>
-                <input type="email" value="${contacto.email || ''}"
-                       onchange="contactosArray[${index}].email = this.value"
-                       placeholder="email@empresa.com">
+        container.innerHTML = contactosArray.map((c, i) => `
+            <div style="border: 1px solid #ccc; padding: 10px; margin: 10px 0;">
+                <p><strong>Contacto ${i + 1}</strong> <button type="button" onclick="eliminarContacto(${i})">Eliminar</button></p>
+                <p>
+                    Nombre Completo: <input type="text" value="${c.nombreCompleto || ''}"
+                           onchange="contactosArray[${i}].nombreCompleto = this.value" required>
+                </p>
+                <p>
+                    Cargo: <input type="text" value="${c.cargo || ''}"
+                           onchange="contactosArray[${i}].cargo = this.value">
+                </p>
+                <p>
+                    Tipo:
+                    <select onchange="contactosArray[${i}].tipoContacto = this.value">
+                        <option value="REPRESENTANTE_LEGAL" ${c.tipoContacto === 'REPRESENTANTE_LEGAL' ? 'selected' : ''}>Representante Legal</option>
+                        <option value="RESPONSABLE_EHS" ${c.tipoContacto === 'RESPONSABLE_EHS' ? 'selected' : ''}>Responsable EHS</option>
+                        <option value="ADMIN_CONTRATO" ${c.tipoContacto === 'ADMIN_CONTRATO' ? 'selected' : ''}>Admin Contrato</option>
+                    </select>
+                </p>
+                <p>
+                    Email: <input type="email" value="${c.email || ''}"
+                           onchange="contactosArray[${i}].email = this.value">
+                </p>
+                <p>
+                    Teléfono: <input type="tel" value="${c.telefono || ''}"
+                           onchange="contactosArray[${i}].telefono = this.value">
+                </p>
+                <p>
+                    <input type="checkbox" ${c.esPrincipal ? 'checked' : ''}
+                           onchange="contactosArray[${i}].esPrincipal = this.checked">
+                    Contacto Principal
+                </p>
             </div>
         `).join('');
     }
 
-    // ============================================
-    // FUNCIONES PARA SERVICIOS
-    // ============================================
-    function agregarServicio() {
-        serviciosArray.push({
-            descripcionServicio: '',
-            nivelRiesgo: ''
-        });
-        renderServicios();
-    }
-
-    function eliminarServicio(index) {
-        serviciosArray.splice(index, 1);
-        renderServicios();
-    }
-
-    function renderServicios() {
-        const container = document.getElementById('serviciosList');
-
-        if (serviciosArray.length === 0) {
-            container.innerHTML = '<p style="color: #666;">No hay servicios agregados. Haga clic en "+ Agregar Servicio".</p>';
-            return;
-        }
-
-        container.innerHTML = serviciosArray.map((servicio, index) => `
-            <div class="servicio-item">
-                <strong>Servicio ${index + 1}</strong>
-                <button type="button" class="btn btn-danger" style="float: right;" onclick="eliminarServicio(${index})">🗑️ Eliminar</button>
-                <br><br>
-                <label>Descripción:</label>
-                <input type="text" value="${servicio.descripcionServicio || ''}"
-                       onchange="serviciosArray[${index}].descripcionServicio = this.value"
-                       placeholder="Ej: Servicios de construcción civil">
-                <br>
-                <label>Nivel de Riesgo:</label>
-                <select onchange="serviciosArray[${index}].nivelRiesgo = this.value">
-                    <option value="">Seleccione...</option>
-                    <option value="BAJO" ${servicio.nivelRiesgo === 'BAJO' ? 'selected' : ''}>BAJO</option>
-                    <option value="MEDIO" ${servicio.nivelRiesgo === 'MEDIO' ? 'selected' : ''}>MEDIO</option>
-                    <option value="ALTO" ${servicio.nivelRiesgo === 'ALTO' ? 'selected' : ''}>ALTO</option>
-                    <option value="ALTO_ESPECIALIZADO" ${servicio.nivelRiesgo === 'ALTO_ESPECIALIZADO' ? 'selected' : ''}>ALTO ESPECIALIZADO</option>
-                </select>
-            </div>
-        `).join('');
-    }
-
-    // ============================================
-    // FUNCIONES CRUD
-    // ============================================
+    // SUBMIT
     async function handleSubmit(event) {
         event.preventDefault();
 
-        const datos = recopilarDatosFormulario();
-        if (!datos) return;
+        const tipoId = document.getElementById('tipoContratista').value;
+        if (!tipoId) {
+            alert('Debe seleccionar un tipo de contratista');
+            return;
+        }
+
+        const datos = {
+            ruc: document.getElementById('ruc').value.trim(),
+            razonSocial: document.getElementById('razonSocial').value.trim(),
+            direccion: document.getElementById('direccion').value.trim() || null,
+            sitioWeb: document.getElementById('sitioWeb').value.trim() || null,
+            rubroComercial: document.getElementById('rubroComercial').value || null,
+            scoreSeguridad: document.getElementById('scoreSeguridad').value ? parseFloat(document.getElementById('scoreSeguridad').value) : null,
+            estadoHabilitacion: document.getElementById('estadoHabilitacion').value,
+            tipoId: tipoId,
+            contactos: contactosArray.filter(c => c.nombreCompleto.trim() !== '')
+        };
 
         if (editandoEmpresaId) {
             await actualizarEmpresa(editandoEmpresaId, datos);
@@ -447,54 +336,24 @@
         }
     }
 
-    function recopilarDatosFormulario() {
-        const tipoSeleccionado = document.querySelector('input[name="tipoEmpresa"]:checked');
-
-        if (!tipoSeleccionado) {
-            mostrarMensaje('Debe seleccionar un tipo de empresa', 'error');
-            return null;
-        }
-
-        return {
-            ruc: document.getElementById('ruc').value.trim(),
-            razonSocial: document.getElementById('razonSocial').value.trim(),
-            direccion: document.getElementById('direccion').value.trim() || null,
-            sector: document.getElementById('sector').value || null,
-            scoreSeguridad: parseInt(document.getElementById('scoreSeguridad').value) || null,
-            contactos: contactosArray.filter(c => c.nombreContacto || c.telefono || c.email),
-            servicios: serviciosArray.filter(s => s.descripcionServicio),
-            tipoEmpresaId: tipoSeleccionado.value
-        };
-    }
-
     async function crearEmpresa(datos) {
         try {
             const response = await fetch('http://localhost:8080/api/empresas', {
                 method: 'POST',
-                headers: {
-                    ...getAuthHeaders(),
-                    'Content-Type': 'application/json'
-                },
+                headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
                 body: JSON.stringify(datos)
             });
-
-            if (response.status === 401 || response.status === 403) {
-                alert('⚠️ Su sesión ha expirado. Por favor, inicie sesión nuevamente.');
-                cerrarSesion();
-                return;
-            }
 
             if (response.ok) {
                 mostrarMensaje('Empresa creada exitosamente', 'success');
                 limpiarFormulario();
                 await cargarEmpresas();
             } else {
-                const error = await response.json();
-                throw new Error(error.message || 'Error al crear empresa');
+                const error = await response.text();
+                throw new Error(error);
             }
         } catch (error) {
-            console.error('Error:', error);
-            mostrarMensaje('Error al crear la empresa: ' + error.message, 'error');
+            mostrarMensaje('Error: ' + error.message, 'error');
         }
     }
 
@@ -502,18 +361,9 @@
         try {
             const response = await fetch(`http://localhost:8080/api/empresas/${empresaId}`, {
                 method: 'PUT',
-                headers: {
-                    ...getAuthHeaders(),
-                    'Content-Type': 'application/json'
-                },
+                headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
                 body: JSON.stringify(datos)
             });
-
-            if (response.status === 401 || response.status === 403) {
-                alert('⚠️ Su sesión ha expirado. Por favor, inicie sesión nuevamente.');
-                cerrarSesion();
-                return;
-            }
 
             if (response.ok) {
                 mostrarMensaje('Empresa actualizada exitosamente', 'success');
@@ -523,8 +373,7 @@
                 throw new Error('Error al actualizar');
             }
         } catch (error) {
-            console.error('Error:', error);
-            mostrarMensaje('Error al actualizar la empresa', 'error');
+            mostrarMensaje('Error: ' + error.message, 'error');
         }
     }
 
@@ -539,8 +388,7 @@
                 cargarDatosEnFormulario(empresa);
             }
         } catch (error) {
-            console.error('Error:', error);
-            mostrarMensaje('Error al cargar datos de la empresa', 'error');
+            mostrarMensaje('Error al cargar empresa', 'error');
         }
     }
 
@@ -556,21 +404,15 @@
             if (response.ok) {
                 mostrarMensaje('Empresa eliminada exitosamente', 'success');
                 await cargarEmpresas();
-            } else {
-                throw new Error('Error al eliminar');
             }
         } catch (error) {
-            console.error('Error:', error);
-            mostrarMensaje('Error al eliminar la empresa', 'error');
+            mostrarMensaje('Error al eliminar', 'error');
         }
     }
 
     async function toggleActivoEmpresa(empresaId, estadoActual) {
         const accion = estadoActual ? 'inactivar' : 'activar';
-
-        if (!confirm(`¿Está seguro que desea ${accion} esta empresa?`)) {
-            return;
-        }
+        if (!confirm(`¿Está seguro que desea ${accion} esta empresa?`)) return;
 
         try {
             const response = await fetch(`http://localhost:8080/api/empresas/${empresaId}/toggle-activo`, {
@@ -581,18 +423,12 @@
             if (response.ok) {
                 mostrarMensaje(`Empresa ${estadoActual ? 'inactivada' : 'activada'} exitosamente`, 'success');
                 await cargarEmpresas();
-            } else {
-                throw new Error('Error al cambiar estado');
             }
         } catch (error) {
-            console.error('Error:', error);
-            mostrarMensaje('Error al cambiar el estado de la empresa', 'error');
+            mostrarMensaje('Error al cambiar estado', 'error');
         }
     }
 
-    // ============================================
-    // FUNCIONES AUXILIARES
-    // ============================================
     function cargarDatosEnFormulario(empresa) {
         editandoEmpresaId = empresa.empresaId;
 
@@ -600,22 +436,19 @@
         document.getElementById('ruc').value = empresa.ruc;
         document.getElementById('razonSocial').value = empresa.razonSocial;
         document.getElementById('direccion').value = empresa.direccion || '';
-        document.getElementById('sector').value = empresa.sector || '';
+        document.getElementById('sitioWeb').value = empresa.sitioWeb || '';
+        document.getElementById('rubroComercial').value = empresa.rubroComercial || '';
         document.getElementById('scoreSeguridad').value = empresa.scoreSeguridad || '';
+        document.getElementById('estadoHabilitacion').value = empresa.estadoHabilitacion || 'PENDIENTE';
+
+        if (empresa.tipo && empresa.tipo.tipoId) {
+            document.getElementById('tipoContratista').value = empresa.tipo.tipoId;
+        }
 
         contactosArray = empresa.contactos || [];
         renderContactos();
 
-        serviciosArray = empresa.servicios || [];
-        renderServicios();
-
-        if (empresa.tipos && empresa.tipos.length > 0) {
-            const tipoId = empresa.tipos[0].tipoId;
-            const radio = document.querySelector(`input[name="tipoEmpresa"][value="${tipoId}"]`);
-            if (radio) radio.checked = true;
-        }
-
-        document.getElementById('formTitle').textContent = '✏️ Editar Empresa';
+        document.getElementById('formTitle').textContent = 'Editar Empresa';
         document.getElementById('submitBtn').textContent = 'Actualizar Empresa';
         document.getElementById('cancelBtn').style.display = 'inline-block';
 
@@ -624,63 +457,33 @@
 
     function limpiarFormulario() {
         editandoEmpresaId = null;
-
         document.getElementById('empresaForm').reset();
-        document.getElementById('empresaId').value = '';
-
         contactosArray = [];
         renderContactos();
-
-        serviciosArray = [];
-        renderServicios();
-
-        document.querySelectorAll('input[name="tipoEmpresa"]').forEach(radio => {
-            radio.checked = false;
-        });
-
-        document.getElementById('formTitle').textContent = '✨ Crear Nueva Empresa';
+        document.getElementById('formTitle').textContent = 'Crear Nueva Empresa';
         document.getElementById('submitBtn').textContent = 'Crear Empresa';
         document.getElementById('cancelBtn').style.display = 'none';
     }
 
     function cancelarEdicion() {
         limpiarFormulario();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function mostrarMensaje(texto, tipo) {
         const container = document.getElementById('mensajeContainer');
-        const mensaje = document.createElement('div');
-        mensaje.className = `mensaje ${tipo}`;
-        mensaje.textContent = texto;
-
-        container.innerHTML = '';
-        container.appendChild(mensaje);
-
-        setTimeout(() => {
-            mensaje.remove();
-        }, 5000);
+        const color = tipo === 'success' ? 'green' : 'red';
+        container.innerHTML = `<p style="color: ${color}; font-weight: bold;">${texto}</p>`;
+        setTimeout(() => container.innerHTML = '', 5000);
     }
 
-    // ============================================
-    // FUNCIÓN CRÍTICA: HEADERS CON JWT
-    // ============================================
     function getAuthHeaders() {
         const token = localStorage.getItem('jwt_token');
-        const tenantId = localStorage.getItem('tenant_id') || 'tenant_a';
+        const tenantId = localStorage.getItem('tenant_id') || 'SYSTEM';
 
-        const headers = {
-            'X-Tenant-ID': tenantId
-        };
-
-        // Agregar el token JWT si existe
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-
+        const headers = { 'X-Tenant-ID': tenantId };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
         return headers;
     }
 </script>
-
 </body>
 </html>

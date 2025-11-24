@@ -5,63 +5,63 @@
     <title>SSOMA - Login</title>
 </head>
 <body>
-    <h1>SSOMA - Login</h1>
-    
-    <div id="errorMessage" style="color:red;display:none;"></div>
+<h1>SSOMA - Login</h1>
 
-    <form id="loginForm">
-        <p>
-            <label>Usuario:</label><br>
-            <input type="text" id="username" required>
-        </p>
-        <p>
-            <label>Contraseña:</label><br>
-            <input type="password" id="password" required>
-        </p>
-        <p>
-            <button type="submit">Ingresar</button>
-        </p>
-    </form>
+<div id="errorMessage" style="color:red;display:none;"></div>
 
-    <script>
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const errorDiv = document.getElementById('errorMessage');
-            
-            errorDiv.style.display = 'none';
+<form id="loginForm">
+    <p>
+        <label>Usuario:</label><br>
+        <input type="text" id="username" required>
+    </p>
+    <p>
+        <label>Contraseña:</label><br>
+        <input type="password" id="password" required>
+    </p>
+    <p>
+        <button type="submit">Ingresar</button>
+    </p>
+</form>
 
-            try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, password })
-                });
+<script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-                if (!response.ok) {
-                    throw new Error('Credenciales incorrectas');
-                }
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const errorDiv = document.getElementById('errorMessage');
 
-                const data = await response.json();
-                
-                // Guardar token y datos en localStorage
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('username', data.username);
-                localStorage.setItem('tenantId', data.tenantId);
-                localStorage.setItem('codigoRol', data.codigoRol);
-                localStorage.setItem('empresaId', data.empresaId || '');
-                localStorage.setItem('esHost', data.esHost);
+        errorDiv.style.display = 'none';
 
-                // Redirigir al dashboard
-                window.location.href = '/dashboard.html';
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
 
-            } catch (error) {
-                errorDiv.textContent = error.message;
-                errorDiv.style.display = 'block';
+            if (!response.ok) {
+                throw new Error('Credenciales incorrectas');
             }
-        });
-    </script>
+
+            const data = await response.json();
+
+            // Guardar token y datos en localStorage con nombres estandarizados
+            localStorage.setItem('jwt_token', data.token);
+            localStorage.setItem('tenant_id', data.tenantId);
+            localStorage.setItem('username', data.username);
+            localStorage.setItem('codigo_rol', data.codigoRol);
+            localStorage.setItem('empresa_id', data.empresaId || '');
+            localStorage.setItem('es_host', data.esHost);
+
+            // Redirigir al dashboard
+            window.location.href = '/dashboard.html';
+
+        } catch (error) {
+            errorDiv.textContent = error.message;
+            errorDiv.style.display = 'block';
+        }
+    });
+</script>
 </body>
 </html>

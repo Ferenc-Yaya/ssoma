@@ -5,18 +5,22 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.ParamDef;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "tbl_empresa_contactos")
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 @Data
 @EqualsAndHashCode(exclude = "empresa")
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmpresaContacto {
+public class EmpresaContactoEntity {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -29,7 +33,7 @@ public class EmpresaContacto {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "empresa_id")
-    private Empresa empresa;
+    private EmpresaEntity empresa;
 
     @Column(name = "nombre_completo", nullable = false, length = 150)
     private String nombreCompleto;
@@ -38,7 +42,7 @@ public class EmpresaContacto {
     private String cargo;
 
     @Column(name = "tipo_contacto", nullable = false, length = 50)
-    private String tipoContacto; // 'REPRESENTANTE_LEGAL', 'RESPONSABLE_EHS', 'ADMIN_CONTRATO'
+    private String tipoContacto;
 
     @Column(name = "email", length = 150)
     private String email;

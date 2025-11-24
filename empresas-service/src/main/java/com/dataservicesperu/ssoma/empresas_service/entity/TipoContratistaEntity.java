@@ -13,7 +13,7 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class TipoContratista {
+public class TipoContratistaEntity {
 
     @Id
     @GeneratedValue(generator = "UUID")

@@ -1,6 +1,6 @@
 package com.dataservicesperu.ssoma.empresas_service.repository;
 
-import com.dataservicesperu.ssoma.empresas_service.entity.EmpresaContacto;
+import com.dataservicesperu.ssoma.empresas_service.entity.EmpresaContactoEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,11 +9,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface EmpresaContactoRepository extends JpaRepository<EmpresaContacto, UUID> {
+public interface EmpresaContactoRepository extends JpaRepository<EmpresaContactoEntity, UUID> {
 
-    List<EmpresaContacto> findByEmpresa_EmpresaIdAndTenantId(UUID empresaId, String tenantId);
+    List<EmpresaContactoEntity> findByEmpresa_EmpresaId(UUID empresaId);
 
-    Optional<EmpresaContacto> findByEmpresa_EmpresaIdAndEsPrincipalTrueAndTenantId(UUID empresaId, String tenantId);
+    Optional<EmpresaContactoEntity> findByEmpresa_EmpresaIdAndEsPrincipalTrue(UUID empresaId);
 
-    List<EmpresaContacto> findByEmpresa_EmpresaIdAndTipoContactoAndTenantId(UUID empresaId, String tipoContacto, String tenantId);
+    List<EmpresaContactoEntity> findByEmpresa_EmpresaIdAndTipoContacto(UUID empresaId, String tipoContacto);
 }

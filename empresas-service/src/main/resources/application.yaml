@@ -15,18 +15,16 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: none
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
         jdbc:
           lob:
             non_contextual_creation: true
-        default_schema: ${POSTGRES_SCHEMA:kallpa}
+        default_schema: ${POSTGRES_SCHEMA:public}
 
 logging:
   level:
     root: INFO
     com.dataservicesperu.ssoma: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

@@ -1,6 +1,6 @@
 package com.dataservicesperu.ssoma.empresas_service.repository;
 
-import com.dataservicesperu.ssoma.empresas_service.entity.TipoContratista;
+import com.dataservicesperu.ssoma.empresas_service.entity.TipoContratistaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,9 +9,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface TipoContratistaRepository extends JpaRepository<TipoContratista, UUID> {
+public interface TipoContratistaRepository extends JpaRepository<TipoContratistaEntity, UUID> {
 
-    Optional<TipoContratista> findByCodigo(String codigo);
+    Optional<TipoContratistaEntity> findByCodigo(String codigo);
 
-    List<TipoContratista> findAll();
+    List<TipoContratistaEntity> findAll();
 }

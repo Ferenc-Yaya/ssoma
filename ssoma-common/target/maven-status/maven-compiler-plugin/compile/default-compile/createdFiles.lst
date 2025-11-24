@@ -1,5 +1,6 @@
 com\dataservicesperu\ssoma\common\config\TenantAutoConfiguration.class
 com\dataservicesperu\ssoma\common\entity\TenantBaseEntity.class
+com\dataservicesperu\ssoma\common\config\TenantWebConfig.class
 com\dataservicesperu\ssoma\common\tenant\TenantContext.class
 com\dataservicesperu\ssoma\common\tenant\TenantInterceptor.class
 com\dataservicesperu\ssoma\common\entity\TenantBaseEntityUUID.class

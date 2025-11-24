@@ -1,6 +1,6 @@
 package com.dataservicesperu.ssoma.empresas_service.repository;
 
-import com.dataservicesperu.ssoma.empresas_service.entity.Empresa;
+import com.dataservicesperu.ssoma.empresas_service.entity.EmpresaEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,21 +11,18 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface EmpresaRepository extends JpaRepository<Empresa, UUID> {
+public interface EmpresaRepository extends JpaRepository<EmpresaEntity, UUID> {
 
-    Optional<Empresa> findByTenantIdAndRuc(String tenantId, String ruc);
+    Optional<EmpresaEntity> findByRuc(String ruc);
 
-    boolean existsByTenantIdAndRuc(String tenantId, String ruc);
+    boolean existsByRuc(String ruc);
 
-    List<Empresa> findByTenantIdAndActivoTrue(String tenantId);
+    List<EmpresaEntity> findByActivoTrue();
 
-    List<Empresa> findByTenantIdAndRubroComercial(String tenantId, String rubroComercial);
+    List<EmpresaEntity> findByRubroComercial(String rubroComercial);
 
-    @Query("SELECT e FROM Empresa e LEFT JOIN FETCH e.contactos LEFT JOIN FETCH e.tipo " +
-           "WHERE e.empresaId = :id AND e.tenantId = :tenantId")
-    Optional<Empresa> findByIdAndTenantIdWithDetails(@Param("id") UUID id, @Param("tenantId") String tenantId);
+    @Query("SELECT e FROM EmpresaEntity e LEFT JOIN FETCH e.contactos LEFT JOIN FETCH e.tipo WHERE e.empresaId = :id")
+    Optional<EmpresaEntity> findByIdWithDetails(@Param("id") UUID id);
 
-    Optional<Empresa> findByEmpresaIdAndTenantId(UUID empresaId, String tenantId);
-
-    List<Empresa> findByTenantIdAndEsHostTrue(String tenantId);
+    List<EmpresaEntity> findByEsHostTrue();
 }

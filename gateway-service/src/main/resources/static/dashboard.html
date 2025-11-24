@@ -5,50 +5,50 @@
     <title>SSOMA - Dashboard</title>
 </head>
 <body>
-    <h1>Dashboard SSOMA</h1>
-    <p>
-        Usuario: <span id="currentUser"></span> | 
-        Rol: <span id="currentRol"></span> | 
-        Tenant: <span id="currentTenant"></span> |
-        <a href="#" onclick="logout()">Cerrar Sesión</a>
-    </p>
+<h1>Dashboard SSOMA</h1>
+<p>
+    Usuario: <span id="currentUser"></span> |
+    Rol: <span id="currentRol"></span> |
+    Tenant: <span id="currentTenant"></span> |
+    <a href="#" onclick="logout()">Cerrar Sesión</a>
+</p>
+<hr>
+
+<h2>Módulos</h2>
+<ul>
+    <li><a href="/activos.html">Activos</a></li>
+    <li><a href="/personas.html">Personas</a></li>
+    <li><a href="/empresas.html">Empresas</a></li>
+    <li><a href="/documentos.html">Documentos</a></li>
+</ul>
+
+<div id="adminLink" style="display:none;">
     <hr>
+    <h3>Administración</h3>
+    <p><a href="/admin.html">Panel de Administración (Roles y Usuarios)</a></p>
+</div>
 
-    <h2>Módulos</h2>
-    <ul>
-        <li><a href="/activos.html">Activos</a></li>
-        <li><a href="/personas.html">Personas</a></li>
-        <li><a href="/empresas.html">Empresas</a></li>
-        <li><a href="/documentos.html">Documentos</a></li>
-    </ul>
+<script>
+    const token = localStorage.getItem('jwt_token');
+    const codigoRol = localStorage.getItem('codigo_rol');
 
-    <div id="adminLink" style="display:none;">
-        <hr>
-        <h3>Administración</h3>
-        <p><a href="/admin.html">Panel de Administración (Roles y Usuarios)</a></p>
-    </div>
+    if (!token) {
+        window.location.href = '/login.html';
+    }
 
-    <script>
-        const token = localStorage.getItem('token');
-        const codigoRol = localStorage.getItem('codigoRol');
+    document.getElementById('currentUser').textContent = localStorage.getItem('username');
+    document.getElementById('currentRol').textContent = codigoRol;
+    document.getElementById('currentTenant').textContent = localStorage.getItem('tenant_id'); // ✅ Cambiado
 
-        if (!token) {
-            window.location.href = '/login.html';
-        }
+    // Mostrar link admin solo para SUPER_ADMIN
+    if (codigoRol === 'SUPER_ADMIN') {
+        document.getElementById('adminLink').style.display = 'block';
+    }
 
-        document.getElementById('currentUser').textContent = localStorage.getItem('username');
-        document.getElementById('currentRol').textContent = codigoRol;
-        document.getElementById('currentTenant').textContent = localStorage.getItem('tenantId');
-
-        // Mostrar link admin solo para SUPER_ADMIN
-        if (codigoRol === 'SUPER_ADMIN') {
-            document.getElementById('adminLink').style.display = 'block';
-        }
-
-        function logout() {
-            localStorage.clear();
-            window.location.href = '/login.html';
-        }
-    </script>
+    function logout() {
+        localStorage.clear();
+        window.location.href = '/login.html';
+    }
+</script>
 </body>
 </html>

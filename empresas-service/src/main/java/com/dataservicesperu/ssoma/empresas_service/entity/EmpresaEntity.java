@@ -5,7 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.ParamDef;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -13,13 +16,14 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tbl_empresas", 
-    uniqueConstraints = @UniqueConstraint(columnNames = {"tenant_id", "ruc"}))
+@Table(name = "tbl_empresas",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"tenant_id", "ruc"}))
+@Filter(name = "tenantFilter", condition = "tenant_id = :tenantId")
 @Data
 @EqualsAndHashCode(exclude = {"contactos", "tipo"})
 @NoArgsConstructor
 @AllArgsConstructor
-public class Empresa {
+public class EmpresaEntity {
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -38,7 +42,7 @@ public class Empresa {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "tipo_id")
-    private TipoContratista tipo;
+    private TipoContratistaEntity tipo;
 
     @Column(name = "direccion", length = 255)
     private String direccion;
@@ -64,9 +68,8 @@ public class Empresa {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    // Relaciones
     @OneToMany(mappedBy = "empresa", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<EmpresaContacto> contactos = new HashSet<>();
+    private Set<EmpresaContactoEntity> contactos = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {

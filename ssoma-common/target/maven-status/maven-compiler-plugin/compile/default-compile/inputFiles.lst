@@ -4,5 +4,6 @@ C:\ssoma-microservices\ssoma-common\src\main\java\com\dataservicesperu\ssoma\com
 C:\ssoma-microservices\ssoma-common\src\main\java\com\dataservicesperu\ssoma\common\tenant\TenantContext.java
 C:\ssoma-microservices\ssoma-common\src\main\java\com\dataservicesperu\ssoma\common\tenant\TenantAspect.java
 C:\ssoma-microservices\ssoma-common\src\main\java\com\dataservicesperu\ssoma\common\entity\TenantBaseEntity.java
+C:\ssoma-microservices\ssoma-common\src\main\java\com\dataservicesperu\ssoma\common\config\TenantWebConfig.java
 C:\ssoma-microservices\ssoma-common\src\main\java\com\dataservicesperu\ssoma\common\tenant\TenantInterceptor.java
 C:\ssoma-microservices\ssoma-common\src\main\java\com\dataservicesperu\ssoma\common\tenant\TenantService.java

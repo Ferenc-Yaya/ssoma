@@ -34,14 +34,21 @@ public class EmpresaController {
         }
     }
 
-    @GetMapping("/{empresaId}")
-    public ResponseEntity<EmpresaDTO> obtenerEmpresa(@PathVariable UUID empresaId) {
-        log.info("GET /empresas/{} - Obtener empresa", empresaId);
+    @GetMapping("/tipos-contratista")
+    public ResponseEntity<List<TipoContratistaDTO>> listarTiposContratista() {
+        log.info("GET /empresas/tipos-contratista - Listar tipos");
+        List<TipoContratistaDTO> tipos = empresaService.listarTiposContratista();
+        return ResponseEntity.ok(tipos);
+    }
+
+    @GetMapping("/host")
+    public ResponseEntity<EmpresaDTO> obtenerEmpresaHost() {
+        log.info("GET /empresas/host - Obtener empresa host");
         try {
-            EmpresaDTO empresa = empresaService.obtenerEmpresaPorId(empresaId);
+            EmpresaDTO empresa = empresaService.obtenerEmpresaHost();
             return ResponseEntity.ok(empresa);
         } catch (IllegalArgumentException | IllegalStateException e) {
-            log.error("Error al obtener empresa: {}", e.getMessage());
+            log.error("Error al obtener empresa host: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
@@ -58,14 +65,15 @@ public class EmpresaController {
         }
     }
 
-    @GetMapping("/host")
-    public ResponseEntity<EmpresaDTO> obtenerEmpresaHost() {
-        log.info("GET /empresas/host - Obtener empresa host");
+    // Este debe ir DESPUÉS de los endpoints específicos
+    @GetMapping("/{empresaId}")
+    public ResponseEntity<EmpresaDTO> obtenerEmpresa(@PathVariable UUID empresaId) {
+        log.info("GET /empresas/{} - Obtener empresa", empresaId);
         try {
-            EmpresaDTO empresa = empresaService.obtenerEmpresaHost();
+            EmpresaDTO empresa = empresaService.obtenerEmpresaPorId(empresaId);
             return ResponseEntity.ok(empresa);
         } catch (IllegalArgumentException | IllegalStateException e) {
-            log.error("Error al obtener empresa host: {}", e.getMessage());
+            log.error("Error al obtener empresa: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         }
     }
@@ -106,12 +114,5 @@ public class EmpresaController {
             log.error("Error al cambiar estado: {}", e.getMessage());
             return ResponseEntity.notFound().build();
         }
-    }
-
-    @GetMapping("/tipos-contratista")
-    public ResponseEntity<List<TipoContratistaDTO>> listarTiposContratista() {
-        log.info("GET /empresas/tipos-contratista - Listar tipos");
-        List<TipoContratistaDTO> tipos = empresaService.listarTiposContratista();
-        return ResponseEntity.ok(tipos);
     }
 }
